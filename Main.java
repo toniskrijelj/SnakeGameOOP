@@ -1,8 +1,8 @@
-
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.*;
 import java.util.Queue;
+import java.util.Random;
 import java.util.Stack;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
@@ -16,18 +16,94 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 
 public class Main {
+    private Collisable[][] collisables;
     public static void main(String[] args) {
-        //Gameplay gameplay = new Gameplay();
+        Painter painter = new Painter();
         Snake snake = new Snake();
+        Paint paint = new Paint();
         JFrame obj = new JFrame();
-        obj.setBounds(0, 0, 1316, 779); // 280
+        for(int i = 0; i <= 64; i++){
+            MatrixMap.add(new Wall(i*20, 0));
+            MatrixMap.add(new Wall(i*20, 720));
+        }
+        for(int i = 1; i < 36; i++){
+            MatrixMap.add(new Wall(0, i*20));
+            MatrixMap.add(new Wall(1280, i*20));
+        }
+        painter.addKeyListener(snake);
+        painter.setFocusable(true);
+        painter.setFocusTraversalKeysEnabled(false);
+        obj.setBounds(0, 0, 1316, 779);
         obj.setBackground(Color.BLACK);
         obj.setResizable(false);
         obj.setVisible(true);
-        obj.add(snake);
+        obj.add(painter);
         obj.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 }
+
+class MatrixMap{
+    private static _Object[][] map = new _Object[37][65];
+    private static MatrixMap matrixMap;
+
+    MatrixMap(){
+        matrixMap = this;
+    }
+
+    static public void add(_Object object){
+        map[object.GetY()/20][object.GetX()/20] = object;
+    }
+
+    static public void updateSnake(SnakeBody snakeHead, SnakeBody snakeTail){
+        map[snakeHead.GetY()/20][snakeHead.GetX()/20] = snakeHead;
+        map[snakeTail.GetY()/20][snakeTail.GetX()/20] = null;
+    }
+
+    static public _Object getObject(SnakeBody snakeHead){
+        return map[snakeHead.GetY()/20][snakeHead.GetX()/20];    
+    }
+}
+
+interface Collisable{
+    public void OnCollide();
+}
+
+class Food extends _Object implements Collisable{
+    
+    private ImageIcon foodIcon = new ImageIcon("Food.png");
+    private static Random r = new Random();
+    private static int low = 36;
+    private static int high = 64;
+
+    Food() {
+        super((r.nextInt(high-1)+1)*20, (r.nextInt(low-1)+1)*20);
+        MatrixMap.add(this);
+        Painter.addToPaint(this, foodIcon);
+        System.out.println("HRANA " + this.GetX() + " " +  this.GetY());
+    }
+
+    @Override
+    public void OnCollide() {
+        Snake.Hrana();
+    }
+}
+
+class Wall extends _Object implements Collisable{
+
+    private static ImageIcon wallIcon = new ImageIcon("Wall.png");
+
+    public Wall(int x, int y) {
+        super(x, y);
+        Painter.addToPaint(this, wallIcon);
+    }
+
+    @Override
+    public void OnCollide() {
+        System.out.println("DEAD");
+    }
+    
+}
+
 class _Object
 {
     protected int x, y;
@@ -50,30 +126,68 @@ class _Object
     public void addY(int size){
         this.y += size;
     }
-
     public int GetX() { return x; }
     public int GetY() { return y; }
+    public void SetX(int x) { this.x = x; }
+    public void SetY(int y) { this.y = y; }
 }
 
-class SnakeBody extends _Object{
+class Painter extends JPanel{
+    private static final long serialVersionUID = 1L;
+
+    private static Painter painter;
+
+    private static Vector<Change> toPaint = new Vector<Change>();
+
+    Painter(){
+        painter = this;
+    }
+
+    private static class Change{
+        public _Object coordinates;
+        public ImageIcon imageIcon;
+
+        Change(_Object coordinates, ImageIcon imageIcon){
+            this.coordinates = coordinates;
+            this.imageIcon = imageIcon;
+        }
+    }
+
+    static void addToPaint(_Object coordinates, ImageIcon imageIcon){
+        toPaint.add(new Change(coordinates, imageIcon));
+        painter.repaint();
+    }
+
+    @Override
+    public void paint(Graphics g) {
+        for(int i = 0; i < toPaint.size(); i++){
+            Painter.toPaint.get(i).imageIcon.paintIcon(this, g, Painter.toPaint.get(i).coordinates.GetX(), Painter.toPaint.get(i).coordinates.GetY());
+        }
+        toPaint.clear();
+    }
+}
+
+class SnakeBody extends _Object implements Collisable{
 
     SnakeBody(int x, int y) {
         super(x, y);
     }
-    SnakeBody getSnakeBody(){
-        return this;
+
+    @Override
+    public void OnCollide() {
+        System.out.println("BODYSNAKE");
     }
 }
 
-class Snake extends JPanel implements KeyListener, ActionListener{
-    private static final long serialVersionUID = 1L;
-    
-    private Stack<SnakeBody> fix;
+class Snake implements KeyListener, ActionListener{
 
-    private ImageIcon snakeHead;
-    private ImageIcon snakeTail;
+    private static Food food;
+    private static boolean hrana = false;
 
-    private int snakeLenght = 30; // krece od nula
+    private static ImageIcon snakeHead;
+    private static ImageIcon snakeTail;
+
+    private int snakeLenght = 3; // krece od nula
     private Vector<SnakeBody> snakeBody;
 
     private boolean right = true;
@@ -81,46 +195,21 @@ class Snake extends JPanel implements KeyListener, ActionListener{
     private boolean up = false; 
     private boolean down = false;
 
-    private Timer timer;
-    private int delay = 100;
-    private static int size = 20;
-    private boolean started = false;
+    private static Timer timer;
+    private static int delay = 100;
+    private int size = 20;
 
     public Snake(){
-        addKeyListener(this);
-        setFocusable(true);
-        setFocusTraversalKeysEnabled(false); 
+        food = new Food();
         snakeBody = new Vector<SnakeBody>();
-        for(int i = 0; i <= snakeLenght; i++){
-            snakeBody.add(new SnakeBody(i*size, 20));
-        }
-        repaint();
         snakeHead = new ImageIcon("Body.png");
         snakeTail = new ImageIcon("Tail.png");
         timer = new Timer(delay, this);
-        fix = new Stack<SnakeBody>();
+        for(int i = 0; i <= snakeLenght; i++){
+            snakeBody.add(new SnakeBody(i*size, 20));
+            Painter.addToPaint(snakeBody.get(i), snakeHead);
+        }
         timer.start();
-    }
-
-    public void paint(Graphics g){
-        if(!started){
-            for(int i = 0; i <= snakeLenght; i++){
-                snakeHead.paintIcon(this, g, snakeBody.get(i).GetX(), snakeBody.get(i).GetY());
-            }
-            started = true;
-        }
-        else{
-            while(!fix.empty()){
-                SnakeBody head = fix.pop();
-                SnakeBody tail = fix.pop();
-                snakeTail.paintIcon(this, g, tail.GetX(), tail.GetY());
-                snakeHead.paintIcon(this, g, head.GetX(), head.GetY());
-            }
-        }
-        //g.setColor(Color.BLACK);
-        //g.fillRect(0, 0, 1280, 720);
-        //snakeImage.paintIcon(this, g, body[0], body[1]);
-        g.dispose();
     }
 
     @Override
@@ -166,13 +255,27 @@ class Snake extends JPanel implements KeyListener, ActionListener{
                 head.addY(-720);
             }
         }
+        Collisable object = (Collisable) MatrixMap.getObject(head);
+        if(object != null){
+            object.OnCollide();
+        }
+        MatrixMap.updateSnake(head, snakeBody.get(0));
         snakeBody.add(head); // dodao novi i prebacio da je glava
-        fix.add(snakeBody.get(0));
-        fix.add(head);
-        snakeBody.remove(0); // obrisao poslednji         
-        repaint();
+        Painter.addToPaint(head, snakeHead);
+        if(!hrana){
+            Painter.addToPaint(snakeBody.get(0), snakeTail);
+            snakeBody.remove(0); // obrisao poslednji
+        }
+        else
+        {
+            snakeLenght++;
+            hrana = false;
+            food = new Food();
+        }
+    }
 
-        System.out.println(" X " + head.GetX() + " Y " + head.GetY());
+    public static void Hrana(){
+        hrana = true;
     }
 
     @Override
