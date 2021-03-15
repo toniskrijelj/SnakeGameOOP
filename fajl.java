@@ -16,6 +16,19 @@ public class fajl {
         myObj = new File("zmijica.txt");
         CreateFile();
     }
+
+    public File getFileObj(){
+        return myObj;
+    }
+
+    public fajl getFFajl(){
+        return f;
+    }
+
+    public void setFFajl(fajl f){
+        this.f = f;
+    }
+
     public void CreateFile(){
         try {
             //File myObj = new File("zmijica.txt");
@@ -46,7 +59,7 @@ public class fajl {
 
     public void WriteToFile(_Object object){
         try {
-            FileWriter myWriter = new FileWriter("zmijica.txt");
+            FileWriter myWriter = new FileWriter(myObj);
             if(object instanceof Wall){
                 myWriter.write("W", object.GetX(), object.GetY()); //TODO napraviti u object klasi string name, getere i setere
             }
