@@ -56,7 +56,7 @@ class MatrixMap{
         map[snakeTail.GetY()/20][snakeTail.GetX()/20-14] = null;
     }
 
-    static public _Object getObject(SnakeBody snakeHead){
+    static public _Object getObject(_Object snakeHead){
         return map[snakeHead.GetY()/20][snakeHead.GetX()/20-14];    
     }
 }
@@ -90,9 +90,12 @@ class Food extends _Object implements Collisable{
 
     Food() {
         super((r.nextInt(highX-lowX)+lowX)*20, (r.nextInt(highY-lowY)+lowY)*20);
+        while(MatrixMap.getObject(this)!=null){
+            x = (r.nextInt(highX-lowX)+lowX)*20;
+            y = (r.nextInt(highY-lowY)+lowY)*20;
+        };
         MatrixMap.add(this);
         Painter.addToPaint(this, foodIcon);
-        System.out.println("HRANA " + this.GetX() + " " +  this.GetY());
     }
 
     @Override
@@ -202,7 +205,8 @@ class Snake implements KeyListener, ActionListener{
     private static ImageIcon snakeHead;
     private static ImageIcon snakeTail;
 
-    private int snakeLenght = 3; // krece od nula
+    private int snakeLenght = 30; // krece od nula
+
     private Vector<SnakeBody> snakeBody;
 
     private boolean right = true;
@@ -226,17 +230,15 @@ class Snake implements KeyListener, ActionListener{
         snakeBody = new Vector<SnakeBody>();
         snakeHead = new ImageIcon("Body.png");
         snakeTail = new ImageIcon("Tail.png");
+        snakeBody.add(new SnakeBody(320, 60));
+        Painter.addToPaint(snakeBody.get(0), snakeHead);
         timer = new Timer(delay, this);
-        for(int i = 0; i <= snakeLenght; i++){
-            snakeBody.add(new SnakeBody(i*size+280, 40));
-            Painter.addToPaint(snakeBody.get(i), snakeHead);
-        }
         timer.start();
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        SnakeBody head = new SnakeBody(snakeBody.get(snakeLenght).GetX(), snakeBody.get(snakeLenght).GetY());
+        SnakeBody head = new SnakeBody(snakeBody.get(snakeBody.size()-1).GetX(), snakeBody.get(snakeBody.size()-1).GetY());
         if(right){
             if(head.GetX()<980)
             {
@@ -282,13 +284,13 @@ class Snake implements KeyListener, ActionListener{
             object.OnCollide();
         }
         MatrixMap.updateSnake(head, snakeBody.get(0));
-        snakeBody.add(head); // dodao novi i prebacio da je glava
+        snakeBody.add(head);
         Painter.addToPaint(head, snakeHead);
-        if(!hrana){
+        if(!hrana && snakeBody.size()>snakeLenght){
             Painter.addToPaint(snakeBody.get(0), snakeTail);
-            snakeBody.remove(0); // obrisao poslednji
+            snakeBody.remove(0);
         }
-        else
+        if(hrana)
         {
             snakeLenght++;
             hrana = false;
