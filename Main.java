@@ -198,17 +198,41 @@ class SnakeBody extends _Object implements Collisable{
     }
 }
 
+class BorderLines{
+    private _Object[] borderLines = new _Object[4];
+    private ImageIcon[] lines;
+
+    BorderLines(_Object object, ImageIcon[] lines){
+        this.lines = lines;
+        borderLines[0] = new _Object(25, object.GetY());
+        borderLines[1] = new _Object(1889, object.GetY());
+        borderLines[2] = new _Object(object.GetX(), 25);
+        borderLines[3] = new _Object(object.GetX(), 969);
+    }
+    public void update(_Object object){
+        repaint(lines[1], lines[3]);
+        borderLines[0].y = borderLines[1].y = object.GetY();
+        borderLines[2].x = borderLines[3].x = object.GetX();
+        repaint(lines[0], lines[2]);
+    }
+    private void repaint(ImageIcon line1, ImageIcon line2){ // repa int XDXDXDXDXD Toni 2k21
+        Painter.addToPaint(new _Object(borderLines[0].x, borderLines[0].y), line1);
+        Painter.addToPaint(new _Object(borderLines[1].x, borderLines[1].y), line1);
+        Painter.addToPaint(new _Object(borderLines[2].x, borderLines[2].y), line2);
+        Painter.addToPaint(new _Object(borderLines[3].x, borderLines[3].y), line2);
+    }
+}
+
 class Snake implements KeyListener, ActionListener{
-
-
     private static ImageIcon snakeHead;
     private static ImageIcon afterHead1;
     private static ImageIcon afterHead2;
-    private static boolean headTrail = true;
+
+    private static ImageIcon[] lines;
+    private static BorderLines borderLines;
 
     private static ImageIcon snakeTail1;
     private static ImageIcon snakeTail2;
-    private static boolean tailTrail = true;
 
     private int snakeLenght = 10;
 
@@ -239,7 +263,12 @@ class Snake implements KeyListener, ActionListener{
         afterHead2 = new ImageIcon("sprites/afterHead2.png");
         snakeTail1 = new ImageIcon("sprites/snakeTail1.png");
         snakeTail2 = new ImageIcon("sprites/snakeTail2.png");
+        lines = new ImageIcon[4];
+        for(int i = 0; i < 4; i++){
+            lines[i] = new ImageIcon("sprites/Line" + (i+1) + ".png");
+        }
         snakeBody.add(new SnakeBody(x*size, y*size));
+        borderLines = new BorderLines(snakeBody.get(0), lines);
         Painter.addToPaint(snakeBody.get(0), snakeHead);
         timer = new Timer(delay, this);
         timer.start();
@@ -247,15 +276,12 @@ class Snake implements KeyListener, ActionListener{
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        SnakeBody head = new SnakeBody(snakeBody.get(snakeBody.size()-1).GetX(), snakeBody.get(snakeBody.size()-1).GetY());
-        if(headTrail){
-            Painter.addToPaint(snakeBody.get(snakeBody.size()-1), afterHead1); 
-            headTrail = false;
+        SnakeBody head = new SnakeBody(snakeBody.lastElement().GetX(), snakeBody.lastElement().GetY());
+        if(snakeBody.lastElement().x/40%2 != snakeBody.lastElement().y/40%2){
+            Painter.addToPaint(snakeBody.lastElement(), afterHead1); 
         }else{
-            Painter.addToPaint(snakeBody.get(snakeBody.size()-1), afterHead2);
-            headTrail = true;
+            Painter.addToPaint(snakeBody.lastElement(), afterHead2);
         }
-        System.out.println("1: "+ head.GetX() + " " + head.GetY());
         if(right){
             if(head.GetX()<1840)
             {
@@ -301,16 +327,14 @@ class Snake implements KeyListener, ActionListener{
             object.OnCollide();
         }
         snakeBody.add(head);
-        System.out.println("2: "+ head.GetX() + " " + head.GetY());
         MatrixMap.updateSnake(head, snakeBody.get(0));
         Painter.addToPaint(head, snakeHead);
+        borderLines.update(head);
         if(!food && snakeBody.size()>snakeLenght){
-            if(tailTrail){
+            if(snakeBody.get(0).x/40%2 != snakeBody.get(0).y/40%2){
                 Painter.addToPaint(snakeBody.get(0), snakeTail1);
-                tailTrail = false;
             }else{
                 Painter.addToPaint(snakeBody.get(0), snakeTail2);
-                tailTrail = true;
             }
             snakeBody.remove(0);
         }
