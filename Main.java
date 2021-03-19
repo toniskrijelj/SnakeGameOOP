@@ -1,23 +1,27 @@
 import java.awt.Color;
 import java.awt.event.*;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.Vector;
 import java.awt.Graphics;
 //import java.util.Timer;
-
 import javax.swing.Timer;
-
 import javax.swing.JPanel;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 
+
+
 public class Main {
     public static void main(String[] args) {
+        ImageIcon backGround = new ImageIcon("sprites/Background.png");
         Painter painter = new Painter();
-        Snake snake = new Snake();
+        Painter.addToPaint(new _Object(0, 0), backGround);
+        Snake snake = new Snake(2, 1);
         Paint paint = new Paint();
         JFrame obj = new JFrame();
-        for(int i = 14; i <= 50; i++){
+        /*
+        for(int i = ; i <= 50; i++){
             MatrixMap.add(new Wall(i*20, 0));
             MatrixMap.add(new Wall(i*20, 720));
         }
@@ -25,14 +29,15 @@ public class Main {
             MatrixMap.add(new Wall(280, i*20));
             MatrixMap.add(new Wall(1000, i*20));
         }
-        Painter.addToPaint(new _Object(0, 0), new ImageIcon("Sprite-0001.png"));
-        Painter.addToPaint(new _Object(1020, 0), new ImageIcon("Sprite-0001.png"));
+        */
+        for(int i = 0; i < 5; i++){
+            new Food();
+        }
         painter.addKeyListener(snake);
         painter.setFocusable(true);
         painter.setFocusTraversalKeysEnabled(false);
-        obj.setBounds(0, 0, 1316, 779);
-        obj.setBackground(Color.BLACK);
-        obj.setResizable(false);
+        //obj.setBounds(0, 0, 1316, 779); //1280 x 720
+        obj.setExtendedState(JFrame.MAXIMIZED_BOTH);
         obj.setVisible(true);
         obj.add(painter);
         obj.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -40,7 +45,7 @@ public class Main {
 }
 
 class MatrixMap{
-    private static _Object[][] map = new _Object[37][37];
+    private static _Object[][] map = new _Object[23][46];
     private static MatrixMap matrixMap;
 
     MatrixMap(){
@@ -48,16 +53,16 @@ class MatrixMap{
     }
 
     static public void add(_Object object){
-        map[object.GetY()/20][object.GetX()/20-14] = object;
+        map[object.GetY()/40-1][object.GetX()/40-1] = object;
     }
 
     static public void updateSnake(SnakeBody snakeHead, SnakeBody snakeTail){
-        map[snakeHead.GetY()/20][snakeHead.GetX()/20-14] = snakeHead;
-        map[snakeTail.GetY()/20][snakeTail.GetX()/20-14] = null;
+        map[snakeHead.GetY()/40-1][snakeHead.GetX()/40-1] = snakeHead;
+        map[snakeTail.GetY()/40-1][snakeTail.GetX()/40-1] = null;
     }
 
     static public _Object getObject(_Object snakeHead){
-        return map[snakeHead.GetY()/20][snakeHead.GetX()/20-14];    
+        return map[snakeHead.GetY()/40-1][snakeHead.GetX()/40-1];    
     }
 }
 
@@ -67,32 +72,30 @@ interface Collisable{
 
 class Teleport extends _Object implements Collisable{
 
-    
-
     public Teleport(int x, int y) {
         super(x, y);
     }
 
     @Override
     public void OnCollide() {
-        
+
     }
 }
 
 class Food extends _Object implements Collisable{
     
-    private ImageIcon foodIcon = new ImageIcon("Food.png");
+    private ImageIcon foodIcon = new ImageIcon("sprites/Orange.png");
     private static Random r = new Random();
-    private static int lowX = 21;
-    private static int highX = 50;
+    private static int lowX = 1;
+    private static int highX = 47;
     private static int lowY = 1;
-    private static int highY = 36;
+    private static int highY = 24;
 
     Food() {
-        super((r.nextInt(highX-lowX)+lowX)*20, (r.nextInt(highY-lowY)+lowY)*20);
+        super((r.nextInt(highX-lowX)+lowX)*40, (r.nextInt(highY-lowY)+lowY)*40);
         while(MatrixMap.getObject(this)!=null){
-            x = (r.nextInt(highX-lowX)+lowX)*20;
-            y = (r.nextInt(highY-lowY)+lowY)*20;
+            x = (r.nextInt(highX-lowX)+lowX)*40;
+            y = (r.nextInt(highY-lowY)+lowY)*40;
         };
         MatrixMap.add(this);
         Painter.addToPaint(this, foodIcon);
@@ -100,13 +103,14 @@ class Food extends _Object implements Collisable{
 
     @Override
     public void OnCollide() {
-        Snake.Hrana();
+        new Food();
+        Snake.Food();
     }
 }
 
 class Wall extends _Object implements Collisable{
 
-    private static ImageIcon wallIcon = new ImageIcon("Wall.png");
+    private static ImageIcon wallIcon = new ImageIcon("sprites/Wall.png");
 
     public Wall(int x, int y) {
         super(x, y);
@@ -115,10 +119,8 @@ class Wall extends _Object implements Collisable{
 
     @Override
     public void OnCollide() {
-        System.out.println("Wall");
         Snake.GameOver();
     }
-    
 }
 
 class _Object
@@ -136,12 +138,12 @@ class _Object
         this.y = y;
     }
     
-    public void addX(int size){
-        this.x += size;
+    public void moveX(int x){
+        this.x += x;
     }
 
-    public void addY(int size){
-        this.y += size;
+    public void moveY(int y){
+        this.y += y;
     }
     public int GetX() { return x; }
     public int GetY() { return y; }
@@ -192,20 +194,23 @@ class SnakeBody extends _Object implements Collisable{
 
     @Override
     public void OnCollide() {
-        System.out.println("SnakeBody");
         Snake.GameOver();
     }
 }
 
 class Snake implements KeyListener, ActionListener{
 
-    private static Food food;
-    private static boolean hrana = false;
 
     private static ImageIcon snakeHead;
-    private static ImageIcon snakeTail;
+    private static ImageIcon afterHead1;
+    private static ImageIcon afterHead2;
+    private static boolean headTrail = true;
 
-    private int snakeLenght = 30; // krece od nula
+    private static ImageIcon snakeTail1;
+    private static ImageIcon snakeTail2;
+    private static boolean tailTrail = true;
+
+    private int snakeLenght = 10;
 
     private Vector<SnakeBody> snakeBody;
 
@@ -213,24 +218,28 @@ class Snake implements KeyListener, ActionListener{
     private boolean left = false;
     private boolean up = false; 
     private boolean down = false;
+    private boolean moved = false;
+    private static boolean food = false;
 
     private static Timer timer;
     private static int delay = 100;
-    private int size = 20;
+    private static int size = 40;
 
-    public static void Hrana(){
-        hrana = true;
+    public static void Food(){
+        food = true;
     }
 
     public static void GameOver(){
     }
 
-    public Snake(){
-        food = new Food();
+    public Snake(int x, int y){
         snakeBody = new Vector<SnakeBody>();
-        snakeHead = new ImageIcon("Body.png");
-        snakeTail = new ImageIcon("Tail.png");
-        snakeBody.add(new SnakeBody(320, 60));
+        snakeHead = new ImageIcon("sprites/snakeHead.png");
+        afterHead1 = new ImageIcon("sprites/afterHead1.png");
+        afterHead2 = new ImageIcon("sprites/afterHead2.png");
+        snakeTail1 = new ImageIcon("sprites/snakeTail1.png");
+        snakeTail2 = new ImageIcon("sprites/snakeTail2.png");
+        snakeBody.add(new SnakeBody(x*size, y*size));
         Painter.addToPaint(snakeBody.get(0), snakeHead);
         timer = new Timer(delay, this);
         timer.start();
@@ -239,63 +248,78 @@ class Snake implements KeyListener, ActionListener{
     @Override
     public void actionPerformed(ActionEvent e) {
         SnakeBody head = new SnakeBody(snakeBody.get(snakeBody.size()-1).GetX(), snakeBody.get(snakeBody.size()-1).GetY());
+        if(headTrail){
+            Painter.addToPaint(snakeBody.get(snakeBody.size()-1), afterHead1); 
+            headTrail = false;
+        }else{
+            Painter.addToPaint(snakeBody.get(snakeBody.size()-1), afterHead2);
+            headTrail = true;
+        }
+        System.out.println("1: "+ head.GetX() + " " + head.GetY());
         if(right){
-            if(head.GetX()<980)
+            if(head.GetX()<1840)
             {
-                head.addX(size);
+                head.moveX(size);
             }
             else
             {
-                head.addX(-680);
+                head.moveX(-1800);
             }
         }
         else if(left){
-            if(head.GetX()>300)
+            if(head.GetX()>40)
             {
-                head.addX(-size);
+                head.moveX(-size);
             }
             else
             {
-                head.addX(680);
+                head.moveX(1800);
             }
         }
         else if(up){
-            if(head.GetY()>20)
+            if(head.GetY()>40)
             {
-                head.addY(-size);
+                head.moveY(-size);
             }
             else
             {
-                head.addY(680);
+                head.moveY(880);
             }
         }
         else if(down){
-            if(head.GetY()<700)
+            if(head.GetY()<920)
             {
-                head.addY(size);
+                head.moveY(size);
             }
             else
             {
-                head.addY(-680);
+                head.moveY(-880);
             }
         }
         Collisable object = (Collisable) MatrixMap.getObject(head);
         if(object != null){
             object.OnCollide();
         }
-        MatrixMap.updateSnake(head, snakeBody.get(0));
         snakeBody.add(head);
+        System.out.println("2: "+ head.GetX() + " " + head.GetY());
+        MatrixMap.updateSnake(head, snakeBody.get(0));
         Painter.addToPaint(head, snakeHead);
-        if(!hrana && snakeBody.size()>snakeLenght){
-            Painter.addToPaint(snakeBody.get(0), snakeTail);
+        if(!food && snakeBody.size()>snakeLenght){
+            if(tailTrail){
+                Painter.addToPaint(snakeBody.get(0), snakeTail1);
+                tailTrail = false;
+            }else{
+                Painter.addToPaint(snakeBody.get(0), snakeTail2);
+                tailTrail = true;
+            }
             snakeBody.remove(0);
         }
-        if(hrana)
+        if(food)
         {
             snakeLenght++;
-            hrana = false;
-            food = new Food();
+            food = false;
         }
+        moved = true;
     }
 
     @Override
@@ -304,6 +328,9 @@ class Snake implements KeyListener, ActionListener{
 
     @Override
     public void keyPressed(KeyEvent e) {
+        if(!moved){
+            return;
+        }
         if(e.getKeyCode() == KeyEvent.VK_A) {
             if(!right){
                 left = true;
@@ -332,6 +359,7 @@ class Snake implements KeyListener, ActionListener{
                 down = false;
             }
         }
+        moved = false;
     }
     @Override
     public void keyReleased(KeyEvent e) {
