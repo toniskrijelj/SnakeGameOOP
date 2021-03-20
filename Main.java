@@ -1,17 +1,21 @@
-import java.awt.Color;
-import java.awt.Font;
 import java.awt.event.*;
+import java.io.File;
 import java.io.IOException;
 import java.util.Random;
 import java.util.Vector;
+import java.awt.Color;
 import java.awt.Graphics;
 import javax.swing.Timer;
 import javax.swing.JPanel;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
+import java.awt.Font;
+import java.awt.GraphicsEnvironment;
+import java.awt.FontFormatException;
 
 public class Main {
     public static void main(String[] args) throws IOException {
+        new DisplayScore(); 
         ImageIcon backGround = new ImageIcon("sprites/Background.png");
         Painter painter = new Painter();
         Painter.addToPaint(new _Object(0, 0), backGround);
@@ -30,8 +34,6 @@ public class Main {
         obj.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 }
-
-
 
 class MatrixMap{
     private static _Object[][] map = new _Object[22][46];
@@ -145,35 +147,59 @@ class Painter extends JPanel{
 
     private static Painter painter;
 
-    private static Vector<Change> toPaint = new Vector<Change>();
+    private static Vector<Change<ImageIcon>> toPaint = new Vector<Change<ImageIcon>>();
+    
+    private static Vector<Change<String>> toWrite = new Vector<Change<String>>();
+
+    Font arcadeClassic;
+    Color fontColor = new Color(190, 0, 148);
+    Color block = new Color(11, 37, 61);
 
     Painter(){
         painter = this;
+        try {
+            arcadeClassic = Font.createFont(Font.TRUETYPE_FONT, new File("small_pixel-7.ttf")).deriveFont(70f);
+            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            ge.registerFont(arcadeClassic);
+        } catch (IOException | FontFormatException e) {
+            e.printStackTrace();
+        }
     }
 
-    private static class Change{
+    private static class Change<T>{
         public _Object coordinates;
-        public ImageIcon imageIcon;
+        public T field;
 
-        Change(_Object coordinates, ImageIcon imageIcon){
+        Change(_Object coordinates, T field){
             this.coordinates = coordinates;
-            this.imageIcon = imageIcon;
+            this.field = field;
         }
     }
 
     static void addToPaint(_Object coordinates, ImageIcon imageIcon){
-        toPaint.add(new Change(coordinates, imageIcon));
+        toPaint.add(new Change<ImageIcon>(coordinates, imageIcon));
         painter.repaint();
     }
 
-
+    static void addToWrite(_Object coordinates, String string){
+        toWrite.add(new Change<String>(coordinates, string));
+        painter.repaint();
+    }
 
     @Override
     public void paint(Graphics g) {
+        for(int i = 0; i < toWrite.size(); i++){ //TODO dodati da moze da se prosledi velicina koordinate gde se preslikava string kako bi mogo da dodam input display
+            g.setColor(block);
+            g.fillRect(24, 940, 500, 72);
+            g.setColor(fontColor);
+            g.setFont(arcadeClassic);
+            g.drawString("SCORE: " + toWrite.get(i).field, toWrite.get(i).coordinates.x, toWrite.get(i).coordinates.y);
+        }
         for(int i = 0; i < toPaint.size(); i++){
-            Painter.toPaint.get(i).imageIcon.paintIcon(this, g, Painter.toPaint.get(i).coordinates.GetX(), Painter.toPaint.get(i).coordinates.GetY());
+            Painter.toPaint.get(i).field.paintIcon(this, g, Painter.toPaint.get(i).coordinates.GetX(), Painter.toPaint.get(i).coordinates.GetY());
         }
         toPaint.clear();
+        toWrite.clear();
     }
 }
 
@@ -213,27 +239,31 @@ class BorderLines{
         Painter.addToPaint(new _Object(borderLines[3].x, borderLines[3].y), line2);
     }
 }
+class DisplayScore implements FoodListener{
 
-class DisplayScore extends JPanel{
-	private static final long serialVersionUID = 1L;
+    private static int score = 0; 
+    private static _Object object;   
 
-    private int score = 0;
-
-    DisplayScore(int score){
-        this.score = score;
-        repaint();
+    DisplayScore(){
+        Snake.AddFoodListener(this);
+        object = new _Object(40, 995);
     }
 
     @Override
-    public void paint(Graphics g){
-        System.out.println("socre");
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("arial", Font.PLAIN, 14));
-        g.drawString("Score: " + score, 40, 960);
+    public void OnEaten() {
+        score++;
+        Painter.addToWrite(object, String.valueOf(score));
     }
 }
 
+interface FoodListener{
+    public void OnEaten();
+}
+
 class Snake implements KeyListener, ActionListener{
+
+    private static Vector<FoodListener> foodListeners = new Vector<FoodListener>();
+
     private static ImageIcon snakeHead;
     private static ImageIcon afterHead1;
     private static ImageIcon afterHead2;
@@ -247,7 +277,6 @@ class Snake implements KeyListener, ActionListener{
     private static boolean tailTrail = true;
 
     private int snakeLenght = 10;
-    private static DisplayScore displayScore;
 
     private Vector<SnakeBody> snakeBody;
 
@@ -269,9 +298,11 @@ class Snake implements KeyListener, ActionListener{
     public static void GameOver(){
     }
 
+    public static void AddFoodListener(FoodListener foodListener){
+        foodListeners.add(foodListener);
+    }
+
     public Snake(int x, int y){
-        displayScore = new DisplayScore(snakeLenght);
-        displayScore.setFocusable(true);
         snakeBody = new Vector<SnakeBody>();
         snakeHead = new ImageIcon("sprites/snakeHead.png");
         afterHead1 = new ImageIcon("sprites/afterHead1.png");
@@ -359,7 +390,9 @@ class Snake implements KeyListener, ActionListener{
         }
         if(food)
         {
-            new DisplayScore(snakeLenght);
+            for(FoodListener foodListener : foodListeners) {
+                foodListener.OnEaten();
+            }
             snakeLenght++;
             food = false;
         }
@@ -407,6 +440,7 @@ class Snake implements KeyListener, ActionListener{
     }
     @Override
     public void keyReleased(KeyEvent e) {
+
     }
 }
 
