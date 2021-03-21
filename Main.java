@@ -15,13 +15,12 @@ import java.awt.FontFormatException;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        new DisplayScore(); 
+        JFrame obj = new JFrame();
         ImageIcon backGround = new ImageIcon("sprites/Background.png");
         Painter painter = new Painter();
         Painter.addToPaint(new _Object(0, 0), backGround);
         Snake snake = new Snake(2, 1);
         //Paint paint = new Paint();
-        JFrame obj = new JFrame();
         for(int i = 0; i < 5; i++){
             new Food();
         }
@@ -146,10 +145,7 @@ class Painter extends JPanel{
     private static final long serialVersionUID = 1L;
 
     private static Painter painter;
-
-    private static Vector<Change<ImageIcon>> toPaint = new Vector<Change<ImageIcon>>();
-    
-    private static Vector<Change<String>> toWrite = new Vector<Change<String>>();
+    private static Vector<Base> toPaint = new Vector<Base>();
 
     Font arcadeClassic;
     Color fontColor = new Color(190, 0, 148);
@@ -166,11 +162,22 @@ class Painter extends JPanel{
         }
     }
 
-    private static class Change<T>{
+    private static class Base{
+        boolean type;
+        Base(boolean type){
+            this.type = type;
+        }
+        public boolean getType(){
+            return type;
+        }
+    }
+
+    private static class Change<T> extends Base{
         public _Object coordinates;
         public T field;
 
         Change(_Object coordinates, T field){
+            super(field instanceof String);
             this.coordinates = coordinates;
             this.field = field;
         }
@@ -182,24 +189,26 @@ class Painter extends JPanel{
     }
 
     static void addToWrite(_Object coordinates, String string){
-        toWrite.add(new Change<String>(coordinates, string));
+        toPaint.add(new Change<String>(coordinates, string));
         painter.repaint();
     }
 
     @Override
     public void paint(Graphics g) {
-        for(int i = 0; i < toWrite.size(); i++){ //TODO dodati da moze da se prosledi velicina koordinate gde se preslikava string kako bi mogo da dodam input display
-            g.setColor(block);
-            g.fillRect(24, 940, 500, 72);
-            g.setColor(fontColor);
-            g.setFont(arcadeClassic);
-            g.drawString("SCORE: " + toWrite.get(i).field, toWrite.get(i).coordinates.x, toWrite.get(i).coordinates.y);
-        }
         for(int i = 0; i < toPaint.size(); i++){
-            Painter.toPaint.get(i).field.paintIcon(this, g, Painter.toPaint.get(i).coordinates.GetX(), Painter.toPaint.get(i).coordinates.GetY());
+            if(toPaint.get(i).getType()){
+                Change<String> nes = (Change<String>) toPaint.get(i); // ne jedi govna
+                g.setColor(block);
+                g.fillRect(nes.coordinates.x, 940, 72*nes.field.length(), 72);// 940 vrh donjeg taba sta god
+                g.setColor(fontColor);
+                g.setFont(arcadeClassic);
+                g.drawString(nes.field, nes.coordinates.x, nes.coordinates.y);
+            }else{
+                Change<ImageIcon> nes = (Change<ImageIcon>) toPaint.get(i); // ne jedi govna
+                nes.field.paintIcon(this, g, nes.coordinates.GetX(), nes.coordinates.GetY());
+            }
         }
         toPaint.clear();
-        toWrite.clear();
     }
 }
 
@@ -221,10 +230,10 @@ class BorderLines{
 
     BorderLines(_Object object, ImageIcon[] lines){
         this.lines = lines;
-        borderLines[0] = new _Object(25, object.GetY());
-        borderLines[1] = new _Object(1889, object.GetY());
-        borderLines[2] = new _Object(object.GetX(), 25);
-        borderLines[3] = new _Object(object.GetX(), 929);
+        borderLines[0] = new _Object(24, object.GetY());
+        borderLines[1] = new _Object(1888, object.GetY());
+        borderLines[2] = new _Object(object.GetX(), 24);
+        borderLines[3] = new _Object(object.GetX(), 928);
     }
     public void update(_Object object){
         repaint(lines[1], lines[3]);
@@ -241,18 +250,81 @@ class BorderLines{
 }
 class DisplayScore implements FoodListener{
 
-    private static int score = 0; 
+    private static int score = -1; 
     private static _Object object;   
 
     DisplayScore(){
         Snake.AddFoodListener(this);
         object = new _Object(40, 995);
+        OnEaten();
     }
 
     @Override
     public void OnEaten() {
         score++;
-        Painter.addToWrite(object, String.valueOf(score));
+        Painter.addToWrite(object, "SCORE:" + String.valueOf(score));
+    }
+}
+
+class Arrows extends _Object{
+
+    private static ImageIcon[] arrowsIcons;
+    private static Arrows arrows;
+
+    Arrows() {
+        super(1422, 943);
+        arrows = this;
+        arrowsIcons = new ImageIcon[4];
+    }
+
+    public static void setArrowIcon(int index, String imageIcon){
+        arrowsIcons[index] = new ImageIcon(imageIcon);
+    }
+
+    public static _Object getArrowObject(){
+        return arrows;
+    }
+
+    public static ImageIcon getArrowIcon(int index){
+        return arrowsIcons[index];
+    }
+}
+
+class Input extends _Object{
+
+    private static Vector<Character> inputs = new Vector<Character>();
+    private static Input input;
+    private static ImageIcon nothing;
+    public Input() {
+        super(1532, 940);
+        input = this;
+        nothing = new ImageIcon("sprites/Nothing.png");
+        for(int i = 0; i < 4; i++){
+            Painter.addToPaint(new _Object(input.x+80*i, input.y), nothing);
+        }
+    }
+    public static void addInput(char c){
+        if(inputs.size()<4){
+            for (Character character : inputs) {
+                if(c == character)
+                {
+                    return;
+                }
+            }
+            inputs.add(c);
+            update();
+        }
+    }
+    private static void update(){
+        for(int i = 0; i < inputs.size();i++){
+            Painter.addToWrite(new _Object(80*i+input.x+14, input.y+55), String.valueOf(inputs.get(i)).toUpperCase());
+        }
+    }
+    public static void removeInput(char c){
+        if(inputs.removeElement(c)){
+            Painter.addToPaint(new _Object(80*inputs.size()+input.x, input.y), nothing);
+            update();
+        }
     }
 }
 
@@ -262,7 +334,9 @@ interface FoodListener{
 
 class Snake implements KeyListener, ActionListener{
 
-    private static Vector<FoodListener> foodListeners = new Vector<FoodListener>();
+    private static Vector<FoodListener> foodListeners;
+    
+    private static Vector<KeyEvent> keyEvents;
 
     private static ImageIcon snakeHead;
     private static ImageIcon afterHead1;
@@ -284,7 +358,6 @@ class Snake implements KeyListener, ActionListener{
     private boolean left = false;
     private boolean up = false; 
     private boolean down = false;
-    private boolean moved = false;
     private static boolean food = false;
 
     private static Timer timer;
@@ -303,6 +376,8 @@ class Snake implements KeyListener, ActionListener{
     }
 
     public Snake(int x, int y){
+        keyEvents = new Vector<KeyEvent>(2);
+        foodListeners  = new Vector<FoodListener>();
         snakeBody = new Vector<SnakeBody>();
         snakeHead = new ImageIcon("sprites/snakeHead.png");
         afterHead1 = new ImageIcon("sprites/afterHead1.png");
@@ -310,12 +385,20 @@ class Snake implements KeyListener, ActionListener{
         snakeTail1 = new ImageIcon("sprites/snakeTail1.png");
         snakeTail2 = new ImageIcon("sprites/snakeTail2.png");
         lines = new ImageIcon[4];
+        new Arrows();
+        new DisplayScore();
+        new Input();
         for(int i = 0; i < 4; i++){
             lines[i] = new ImageIcon("sprites/Line" + (i+1) + ".png");
+            Arrows.setArrowIcon(i, "sprites/Arrow" + (i+1) + ".png");
         }
         snakeBody.add(new SnakeBody(x*size, y*size));
         borderLines = new BorderLines(snakeBody.get(0), lines);
         Painter.addToPaint(snakeBody.get(0), snakeHead);
+        Painter.addToPaint(Arrows.getArrowObject(), Arrows.getArrowIcon(2));
+        if(snakeBody.lastElement().GetX()/40%2!=snakeBody.lastElement().GetY()/40%2){
+            headTrail = false;
+        }
         timer = new Timer(delay, this);
         timer.start();
     }
@@ -329,6 +412,42 @@ class Snake implements KeyListener, ActionListener{
         }else{
             Painter.addToPaint(snakeBody.lastElement(), afterHead2);
             headTrail = true;
+        }
+        if(keyEvents.size()>0){
+            KeyEvent keyEvent = keyEvents.get(0);
+            if(keyEvent.getKeyCode() == KeyEvent.VK_A) {
+                if(!right){
+                    left = true;
+                    up = false;
+                    down = false;
+                    Painter.addToPaint(Arrows.getArrowObject(), Arrows.getArrowIcon(0));
+                }
+            }
+            else if(keyEvent.getKeyCode() == KeyEvent.VK_W) {
+                if(!down){
+                    up = true;
+                    right = false;
+                    left = false;
+                    Painter.addToPaint(Arrows.getArrowObject(), Arrows.getArrowIcon(1));
+                }
+            }
+            else if(keyEvent.getKeyCode() == KeyEvent.VK_S) {
+                if(!up){
+                    down = true;
+                    left = false;
+                    right = false;
+                    Painter.addToPaint(Arrows.getArrowObject(), Arrows.getArrowIcon(3));
+                }
+            }
+            else if(keyEvent.getKeyCode() == KeyEvent.VK_D) {
+                if(!left){
+                    right = true;
+                    up = false;
+                    down = false;
+                    Painter.addToPaint(Arrows.getArrowObject(), Arrows.getArrowIcon(2));
+                }
+            }
+            keyEvents.remove(0);
         }
         if(right){
             if(head.GetX()<1840)
@@ -396,7 +515,6 @@ class Snake implements KeyListener, ActionListener{
             snakeLenght++;
             food = false;
         }
-        moved = true;
     }
 
     @Override
@@ -405,42 +523,16 @@ class Snake implements KeyListener, ActionListener{
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if(!moved){
-            return;
+        if(keyEvents.size()<2)
+        {
+            keyEvents.add(e);
         }
-        if(e.getKeyCode() == KeyEvent.VK_A) {
-            if(!right){
-                left = true;
-                up = false;
-                down = false;
-            }
-        }
-        else if(e.getKeyCode() == KeyEvent.VK_W) {
-            if(!down){
-                up = true;
-                right = false;
-                left = false;
-            }
-        }
-        else if(e.getKeyCode() == KeyEvent.VK_S) {
-            if(!up){
-                down = true;
-                left = false;
-                right = false;
-            }
-        }
-        else if(e.getKeyCode() == KeyEvent.VK_D) {
-            if(!left){
-                right = true;
-                up = false;
-                down = false;
-            }
-        }
-        moved = false;
+        Input.addInput(e.getKeyChar());
     }
+    
     @Override
     public void keyReleased(KeyEvent e) {
-
+        Input.removeInput(e.getKeyChar());
     }
 }
 
