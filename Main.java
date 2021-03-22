@@ -20,6 +20,7 @@ public class Main {
         Painter painter = new Painter();
         Painter.addToPaint(new _Object(0, 0), backGround);
         Snake snake = new Snake(2, 1);
+        new VibeCheck();
         //Paint paint = new Paint();
         for(int i = 0; i < 5; i++){
             new Food();
@@ -34,25 +35,37 @@ public class Main {
     }
 }
 
+class VibeCheck implements ActionListener{
+    private static Timer timer;
+    private static int delay = 500;
+    VibeCheck(){
+        timer = new Timer(delay, this);
+        timer.start();
+    }
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        Painter.budza();
+        timer.stop();
+    }
+}
+
 class MatrixMap{
+    
     private static _Object[][] map = new _Object[22][46];
     private static MatrixMap matrixMap;
 
-    MatrixMap(){
+    public MatrixMap(){
         matrixMap = this;
     }
-
     static public void add(_Object object){
         map[object.GetY()/40-1][object.GetX()/40-1] = object;
     }
-
-    static public void updateSnake(SnakeBody snakeHead, SnakeBody snakeTail){
-        map[snakeHead.GetY()/40-1][snakeHead.GetX()/40-1] = snakeHead;
+    static public void updateSnake(SnakeBody head, SnakeBody snakeTail){
+        map[head.GetY()/40-1][head.GetX()/40-1] = head;
         map[snakeTail.GetY()/40-1][snakeTail.GetX()/40-1] = null;
     }
-
-    static public _Object getObject(_Object snakeHead){
-        return map[snakeHead.GetY()/40-1][snakeHead.GetX()/40-1];    
+    static public _Object getObject(_Object head){
+        return map[head.GetY()/40-1][head.GetX()/40-1];    
     }
 }
 
@@ -65,10 +78,8 @@ class Teleport extends _Object implements Collisable{
     public Teleport(int x, int y) {
         super(x, y);
     }
-
     @Override
     public void OnCollide() {
-
     }
 }
 
@@ -81,7 +92,7 @@ class Food extends _Object implements Collisable{
     private static int lowY = 1;
     private static int highY = 23;
 
-    Food() {
+    public Food() {
         super((r.nextInt(highX-lowX)+lowX)*40, (r.nextInt(highY-lowY)+lowY)*40);
         while(MatrixMap.getObject(this)!=null){
             x = (r.nextInt(highX-lowX)+lowX)*40;
@@ -90,7 +101,6 @@ class Food extends _Object implements Collisable{
         MatrixMap.add(this);
         Painter.addToPaint(this, foodIcon);
     }
-
     @Override
     public void OnCollide() {
         new Food();
@@ -106,7 +116,6 @@ class Wall extends _Object implements Collisable{
         super(x, y);
         Painter.addToPaint(this, wallIcon);
     }
-
     @Override
     public void OnCollide() {
         Snake.GameOver();
@@ -121,18 +130,15 @@ class _Object
     {
         Move(x, y);
     }
-    
     public void Move(int x, int y)
     {
         this.x = x;
         this.y = y;
     }
-    
-    public void moveX(int x){
+    public void addToX(int x){
         this.x += x;
     }
-
-    public void moveY(int y){
+    public void addToY(int y){
         this.y += y;
     }
     public int GetX() { return x; }
@@ -146,12 +152,14 @@ class Painter extends JPanel{
 
     private static Painter painter;
     private static Vector<Base> toPaint = new Vector<Base>();
+    private static Vector<Base> lastPaint = new Vector<Base>();
 
-    Font arcadeClassic;
-    Color fontColor = new Color(190, 0, 148);
-    Color block = new Color(11, 37, 61);
+    private static boolean firstTime = true;
+    private static Font arcadeClassic;
+    private static Color fontColor = new Color(190, 0, 148);
+    private static Color block = new Color(11, 37, 61);
 
-    Painter(){
+    public Painter(){
         painter = this;
         try {
             arcadeClassic = Font.createFont(Font.TRUETYPE_FONT, new File("small_pixel-7.ttf")).deriveFont(70f);
@@ -161,7 +169,6 @@ class Painter extends JPanel{
             e.printStackTrace();
         }
     }
-
     private static class Base{
         boolean type;
         Base(boolean type){
@@ -171,7 +178,6 @@ class Painter extends JPanel{
             return type;
         }
     }
-
     private static class Change<T> extends Base{
         public _Object coordinates;
         public T field;
@@ -182,20 +188,32 @@ class Painter extends JPanel{
             this.field = field;
         }
     }
-
-    static void addToPaint(_Object coordinates, ImageIcon imageIcon){
+    public static void addToPaint(_Object coordinates, ImageIcon imageIcon){
         toPaint.add(new Change<ImageIcon>(coordinates, imageIcon));
         painter.repaint();
     }
-
-    static void addToWrite(_Object coordinates, String string){
+    public static void addToWrite(_Object coordinates, String string){
         toPaint.add(new Change<String>(coordinates, string));
         painter.repaint();
     }
-
+    public static void budza(){
+        for(int i = 0; i < toPaint.size(); i++){
+            lastPaint.add(toPaint.get(i));
+        }
+        toPaint.clear();
+        for(int i = 0; i < lastPaint.size(); i++){
+            toPaint.add(lastPaint.get(i));
+        }
+        lastPaint.clear();
+        firstTime = false;
+        painter.repaint();
+    }
     @Override
     public void paint(Graphics g) {
         for(int i = 0; i < toPaint.size(); i++){
+            if(firstTime){
+                lastPaint.add(toPaint.get(i));
+            }
             if(toPaint.get(i).getType()){
                 Change<String> nes = (Change<String>) toPaint.get(i); // ne jedi govna
                 g.setColor(block);
@@ -217,7 +235,6 @@ class SnakeBody extends _Object implements Collisable{
     SnakeBody(int x, int y) {
         super(x, y);
     }
-
     @Override
     public void OnCollide() {
         Snake.GameOver();
@@ -225,6 +242,7 @@ class SnakeBody extends _Object implements Collisable{
 }
 
 class BorderLines{
+
     private _Object[] borderLines = new _Object[4];
     private ImageIcon[] lines;
 
@@ -241,7 +259,7 @@ class BorderLines{
         borderLines[2].x = borderLines[3].x = object.GetX();
         repaint(lines[0], lines[2]);
     }
-    private void repaint(ImageIcon line1, ImageIcon line2){ // repa int XDXDXDXDXD Toni 2k21
+    private void repaint(ImageIcon line1, ImageIcon line2){ // repa int :))) Toni 2k21
         Painter.addToPaint(new _Object(borderLines[0].x, borderLines[0].y), line1);
         Painter.addToPaint(new _Object(borderLines[1].x, borderLines[1].y), line1);
         Painter.addToPaint(new _Object(borderLines[2].x, borderLines[2].y), line2);
@@ -258,7 +276,6 @@ class DisplayScore implements FoodListener{
         object = new _Object(40, 995);
         OnEaten();
     }
-
     @Override
     public void OnEaten() {
         score++;
@@ -271,22 +288,19 @@ class Arrows extends _Object{
     private static ImageIcon[] arrowsIcons;
     private static Arrows arrows;
 
-    Arrows() {
+    public Arrows() {
         super(1422, 943);
         arrows = this;
         arrowsIcons = new ImageIcon[4];
     }
-
-    public static void setArrowIcon(int index, String imageIcon){
-        arrowsIcons[index] = new ImageIcon(imageIcon);
+    public static void setArrowIcon(int headIndex, String imageIcon){
+        arrowsIcons[headIndex] = new ImageIcon(imageIcon);
     }
-
-    public static _Object getArrowObject(){
+    public static ImageIcon getArrowIcon(int headIndex){
+        return arrowsIcons[headIndex];
+    }
+    public static _Object getObject(){
         return arrows;
-    }
-
-    public static ImageIcon getArrowIcon(int index){
-        return arrowsIcons[index];
     }
 }
 
@@ -294,11 +308,10 @@ class Input extends _Object{
 
     private static Vector<Character> inputs = new Vector<Character>();
     private static Input input;
-    private static ImageIcon nothing;
+    private static ImageIcon nothing = new ImageIcon("sprites/Nothing.png");
     public Input() {
         super(1532, 940);
         input = this;
-        nothing = new ImageIcon("sprites/Nothing.png");
         for(int i = 0; i < 4; i++){
             Painter.addToPaint(new _Object(input.x+80*i, input.y), nothing);
         }
@@ -315,15 +328,15 @@ class Input extends _Object{
             update();
         }
     }
-    private static void update(){
-        for(int i = 0; i < inputs.size();i++){
-            Painter.addToWrite(new _Object(80*i+input.x+14, input.y+55), String.valueOf(inputs.get(i)).toUpperCase());
-        }
-    }
     public static void removeInput(char c){
         if(inputs.removeElement(c)){
             Painter.addToPaint(new _Object(80*inputs.size()+input.x, input.y), nothing);
             update();
+        }
+    }
+    private static void update(){
+        for(int i = 0; i < inputs.size();i++){
+            Painter.addToWrite(new _Object(80*i+input.x+14, input.y+55), String.valueOf(inputs.get(i)).toUpperCase());
         }
     }
 }
@@ -334,30 +347,30 @@ interface FoodListener{
 
 class Snake implements KeyListener, ActionListener{
 
-    private static Vector<FoodListener> foodListeners;
+    private static Vector<FoodListener> foodListeners   = new Vector<FoodListener>();
+
+    private static Vector<KeyEvent> keyEvents = new Vector<KeyEvent>(2);
+
+    private static int snakeLenght = 3;
+    private static Vector<SnakeBody> snakeBody = new Vector<SnakeBody>(snakeLenght);
+
+    private static int headIndex = 2;
+    private static ImageIcon[] head = new ImageIcon[4];
+    private static ImageIcon afterHead1 = new ImageIcon("sprites/afterHead1.png");
+    private static ImageIcon afterHead2 = new ImageIcon("sprites/afterHead2.png");
+    private static boolean headTrail = true;
     
-    private static Vector<KeyEvent> keyEvents;
-
-    private static ImageIcon snakeHead;
-    private static ImageIcon afterHead1;
-    private static ImageIcon afterHead2;
-    private static boolean headTrail = true; 
-
-    private static ImageIcon[] lines;
-    private static BorderLines borderLines;
-
-    private static ImageIcon snakeTail1;
-    private static ImageIcon snakeTail2;
+    private static ImageIcon snakeTail1 = new ImageIcon("sprites/Tail1.png");
+    private static ImageIcon snakeTail2 = new ImageIcon("sprites/Tail2.png");
     private static boolean tailTrail = true;
 
-    private int snakeLenght = 10;
+    private static ImageIcon[] lines = new ImageIcon[4];
+    private static BorderLines borderLines;
 
-    private Vector<SnakeBody> snakeBody;
-
-    private boolean right = true;
-    private boolean left = false;
-    private boolean up = false; 
-    private boolean down = false;
+    private static boolean right = true;
+    private static boolean left = false;
+    private static boolean up = false; 
+    private static boolean down = false;
     private static boolean food = false;
 
     private static Timer timer;
@@ -367,45 +380,33 @@ class Snake implements KeyListener, ActionListener{
     public static void Food(){
         food = true;
     }
-
     public static void GameOver(){
     }
-
     public static void AddFoodListener(FoodListener foodListener){
         foodListeners.add(foodListener);
     }
-
     public Snake(int x, int y){
-        keyEvents = new Vector<KeyEvent>(2);
-        foodListeners  = new Vector<FoodListener>();
-        snakeBody = new Vector<SnakeBody>();
-        snakeHead = new ImageIcon("sprites/snakeHead.png");
-        afterHead1 = new ImageIcon("sprites/afterHead1.png");
-        afterHead2 = new ImageIcon("sprites/afterHead2.png");
-        snakeTail1 = new ImageIcon("sprites/snakeTail1.png");
-        snakeTail2 = new ImageIcon("sprites/snakeTail2.png");
-        lines = new ImageIcon[4];
         new Arrows();
         new DisplayScore();
         new Input();
         for(int i = 0; i < 4; i++){
+            head[i] = new ImageIcon("sprites/Head" + (i+1) + ".png");
             lines[i] = new ImageIcon("sprites/Line" + (i+1) + ".png");
             Arrows.setArrowIcon(i, "sprites/Arrow" + (i+1) + ".png");
         }
         snakeBody.add(new SnakeBody(x*size, y*size));
         borderLines = new BorderLines(snakeBody.get(0), lines);
-        Painter.addToPaint(snakeBody.get(0), snakeHead);
-        Painter.addToPaint(Arrows.getArrowObject(), Arrows.getArrowIcon(2));
+        Painter.addToPaint(snakeBody.get(0), head[headIndex]);
+        Painter.addToPaint(Arrows.getObject(), Arrows.getArrowIcon(2));
         if(snakeBody.lastElement().GetX()/40%2!=snakeBody.lastElement().GetY()/40%2){
             headTrail = false;
         }
         timer = new Timer(delay, this);
         timer.start();
     }
-
     @Override
     public void actionPerformed(ActionEvent e) {
-        SnakeBody head = new SnakeBody(snakeBody.lastElement().GetX(), snakeBody.lastElement().GetY());
+        SnakeBody newHead = new SnakeBody(snakeBody.lastElement().GetX(), snakeBody.lastElement().GetY());
         if(headTrail){
             Painter.addToPaint(snakeBody.lastElement(), afterHead1); 
             headTrail = false;
@@ -420,7 +421,7 @@ class Snake implements KeyListener, ActionListener{
                     left = true;
                     up = false;
                     down = false;
-                    Painter.addToPaint(Arrows.getArrowObject(), Arrows.getArrowIcon(0));
+                    headIndex = 0;
                 }
             }
             else if(keyEvent.getKeyCode() == KeyEvent.VK_W) {
@@ -428,7 +429,7 @@ class Snake implements KeyListener, ActionListener{
                     up = true;
                     right = false;
                     left = false;
-                    Painter.addToPaint(Arrows.getArrowObject(), Arrows.getArrowIcon(1));
+                    headIndex = 1;
                 }
             }
             else if(keyEvent.getKeyCode() == KeyEvent.VK_S) {
@@ -436,7 +437,7 @@ class Snake implements KeyListener, ActionListener{
                     down = true;
                     left = false;
                     right = false;
-                    Painter.addToPaint(Arrows.getArrowObject(), Arrows.getArrowIcon(3));
+                    headIndex = 3;
                 }
             }
             else if(keyEvent.getKeyCode() == KeyEvent.VK_D) {
@@ -444,59 +445,60 @@ class Snake implements KeyListener, ActionListener{
                     right = true;
                     up = false;
                     down = false;
-                    Painter.addToPaint(Arrows.getArrowObject(), Arrows.getArrowIcon(2));
+                    headIndex = 2;
                 }
             }
+            Painter.addToPaint(Arrows.getObject(), Arrows.getArrowIcon(headIndex));
             keyEvents.remove(0);
         }
         if(right){
-            if(head.GetX()<1840)
+            if(newHead.GetX()<1840)
             {
-                head.moveX(size);
+                newHead.addToX(size);
             }
             else
             {
-                head.moveX(-1800);
+                newHead.addToX(-1800);
             }
         }
         else if(left){
-            if(head.GetX()>40)
+            if(newHead.GetX()>40)
             {
-                head.moveX(-size);
+                newHead.addToX(-size);
             }
             else
             {
-                head.moveX(1800);
+                newHead.addToX(1800);
             }
         }
         else if(up){
-            if(head.GetY()>40)
+            if(newHead.GetY()>40)
             {
-                head.moveY(-size);
+                newHead.addToY(-size);
             }
             else
             {
-                head.moveY(840);
+                newHead.addToY(840);
             }
         }
         else if(down){
-            if(head.GetY()<880)
+            if(newHead.GetY()<880)
             {
-                head.moveY(size);
+                newHead.addToY(size);
             }
             else
             {
-                head.moveY(-840);
+                newHead.addToY(-840);
             }
         }
-        Collisable object = (Collisable) MatrixMap.getObject(head);
+        Collisable object = (Collisable) MatrixMap.getObject(newHead);
         if(object != null){
             object.OnCollide();
         }
-        snakeBody.add(head);
-        MatrixMap.updateSnake(head, snakeBody.get(0));
-        Painter.addToPaint(head, snakeHead);
-        borderLines.update(head);
+        snakeBody.add(newHead);
+        MatrixMap.updateSnake(newHead, snakeBody.get(0));
+        Painter.addToPaint(newHead, head[headIndex]);
+        borderLines.update(newHead);
         if(!food && snakeBody.size()>snakeLenght){
             if(tailTrail){
                 Painter.addToPaint(snakeBody.get(0), snakeTail1);
@@ -516,11 +518,9 @@ class Snake implements KeyListener, ActionListener{
             food = false;
         }
     }
-
     @Override
     public void keyTyped(KeyEvent e) {
     }
-
     @Override
     public void keyPressed(KeyEvent e) {
         if(keyEvents.size()<2)
@@ -529,192 +529,8 @@ class Snake implements KeyListener, ActionListener{
         }
         Input.addInput(e.getKeyChar());
     }
-    
     @Override
     public void keyReleased(KeyEvent e) {
         Input.removeInput(e.getKeyChar());
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-class Gameplay extends JPanel implements KeyListener, ActionListener{
-
-    private int[] snakeXLenght = new int[750];
-    private int[] snakeYLenght = new int[750];
-
-    private boolean left = false;
-    private boolean right = false;
-    private boolean up = false;
-    private boolean down = false;
-
-    private int moves = 0;
-
-    private ImageIcon rightMouth;
-    private ImageIcon leftMouth;
-    private ImageIcon upMouth;
-    private ImageIcon downMouth;
-
-    private int lenghtOfSnake = 3;
-    
-    private Timer timer;
-    private int delay = 100;
-
-    private ImageIcon snakeImage;
-
-    private ImageIcon titleImage;
-
-    public Gameplay(){
-        //addKeyListener(this);
-        //setFocusable(true);
-        //setFocusTraversalKeysEnabled(false);
-        //timer = new Timer(delay, this);
-        //timer.start();
-    }
-
-    public void paint(Graphics g){
-        if(moves == 0){
-            snakeXLenght[2] = 50;
-            snakeXLenght[1] = 75;
-            snakeXLenght[0] = 100;
-            
-            snakeYLenght[2] = 100;
-            snakeYLenght[1] = 100;
-            snakeYLenght[0] = 100;
-               
-        }
-
-        draw title image border
-        g.setColor(Color.white);
-        g.drawRect(24, 10, 851, 55);
-
-        draw the title image
-        titleImage = new ImageIcon("path.png");
-        titleImage.paintIcon(this, g, 25, 11);
-
-        draw border for gameplay
-        g.setColor(Color.WHITE);
-        g.drawRect(24, 27, 851, 577);
-        
-        draw background for the gameplay
-        g.setColor(Color.BLACK);
-        g.fillRect(25, 75, 850, 575);
-
-        rightMouth = new ImageIcon("path.png");
-        rightMouth.paintIcon(this, , snakeXLenght[0], snakeYLenght[0]);
-
-        for(int a = 0; a < lenghtOfSnake; a++){
-            if(a == 0 && right){
-                rightMouth = new ImageIcon("path.png");
-                rightMouth.paintIcon(this, , snakeXLenght[a], snakeYLenght[a]);
-            }
-            else if(a == 0 && left){
-                leftMouth = new ImageIcon("path.png");
-                leftMouth.paintIcon(this, , snakeXLenght[a], snakeYLenght[a]);
-            }else if(a == 0 && up){
-                upMouth = new ImageIcon("path.png");
-                upMouth.paintIcon(this, , snakeXLenght[a], snakeYLenght[a]);
-            }else if(a == 0 && down){
-                downMouth = new ImageIcon("path.png");
-                downMouth.paintIcon(this, , snakeXLenght[a], snakeYLenght[a]);
-            }
-            if(a!=0){
-                snakeImage = new ImageIcon("path.png");
-                snakeImage.paintIcon(this, g, snakeXLenght[a], snakeYLenght[a]);
-            }
-        }
-        g.dispose();
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-    }
-
-    @Override
-    public void keyTyped(KeyEvent e) {
-
-    }
-
-    @Override
-    public void keyPressed(KeyEvent e) {
-        if(e.getKeyCode() == KeyEvent.VK_RIGHT){
-            moves++;
-            right = true;
-            if(!left){
-                right = true;
-            }
-            else
-            {
-                right = false;
-                left = true;
-            }
-            up = false;
-            down = false;
-        }
-        if(e.getKeyCode() == KeyEvent.VK_LEFT){
-            moves++;
-            right = true;
-            if(!left){
-                right = true;
-            }
-            else
-            {
-                right = false;
-                left = true;
-            }
-            up = false;
-            down = false;
-        }
-        if(e.getKeyCode() == KeyEvent.VK_UP){
-            moves++;
-            right = true;
-            if(!left){
-                right = true;
-            }
-            else
-            {
-                right = false;
-                left = true;
-            }
-            up = false;
-            down = false;
-        }
-
-        if(e.getKeyCode() == KeyEvent.VK_DOWN){
-            moves++;
-            right = true;
-            if(!left){
-                right = true;
-            }
-            else
-            {
-                right = false;
-                left = true;
-            }
-            up = false;
-            down = false;
-        }
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) {
-
-    }
-}
-*/
