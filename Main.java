@@ -15,6 +15,7 @@ import java.awt.FontFormatException;
 
 public class Main {
     public static void main(String[] args) throws IOException {
+        System.out.println("started");
         JFrame obj = new JFrame();
         ImageIcon backGround = new ImageIcon("sprites/Background.png");
         Painter painter = new Painter();
