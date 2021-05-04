@@ -15,24 +15,10 @@ import java.awt.FontFormatException;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        System.out.println("started");
-        JFrame obj = new JFrame();
-        ImageIcon backGround = new ImageIcon("sprites/Background.png");
-        Painter painter = new Painter();
-        Painter.addToPaint(new _Object(0, 0), backGround);
-        Snake snake = new Snake(2, 1);
-        new VibeCheck();
-        //Paint paint = new Paint();
-        for(int i = 0; i < 5; i++){
-            new Food();
-        }
-        painter.addKeyListener(snake);
-        painter.setFocusable(true);
-        painter.setFocusTraversalKeysEnabled(false);
-        obj.setExtendedState(JFrame.MAXIMIZED_BOTH);
-        obj.setVisible(true);
-        obj.add(painter);
-        obj.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        //System.out.println("started");
+
+        LaunchPage launchPage = new LaunchPage(); 
+        
     }
 }
 
