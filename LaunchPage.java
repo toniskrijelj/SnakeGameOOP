@@ -24,7 +24,9 @@ public class LaunchPage implements ActionListener{
     public void actionPerformed(ActionEvent e){
         if(e.getSource()==myButton){
             frame.dispose();
-            GameW myWindow = new GameW();
+            Main(null);
+            
         }
     }
+    
 }

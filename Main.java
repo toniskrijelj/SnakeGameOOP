@@ -12,23 +12,79 @@ import javax.swing.JFrame;
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.awt.FontFormatException;
+import java.awt.*;
+import javax.swing.*;
 
 public class Main {
-    public static void main(String[] args) throws IOException {
-        //System.out.println("started");
 
-        LaunchPage launchPage = new LaunchPage(); 
-        
+    static void LaunchPage() {
+        JFrame jf = new JFrame("Launch Page");
+        JPanel jp = new JPanel();
+        JLabel jl1 = new JLabel("Username");
+        JLabel jl2 = new JLabel("Password");
+        JButton button = new JButton("Start");
+
+        JTextField jt1 = new JTextField(20);
+        JTextField jt2 = new JTextField(20);
+        jf.add(jp);
+        jp.add(jl1);
+        jp.add(jt1);
+        jp.add(jl2);
+        jp.add(jt2);
+        jp.add(button);
+
+        jf.setSize(400, 600);
+        jf.setVisible(true);
+
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("Checking!");
+                if (e.getSource() == button) {
+                    jf.dispose();
+                    JFrame obj = new JFrame();
+
+                    ImageIcon backGround = new ImageIcon("sprites/Background.png");
+                    Painter painter = new Painter();
+                    Painter.addToPaint(new _Object(0, 0), backGround);
+                    Snake snake = new Snake(2, 1);
+                    new VibeCheck();
+                    // Paint paint = new Paint();
+                    for (int i = 0; i < 5; i++) {
+                        new Food();
+                    }
+                    painter.addKeyListener(snake);
+                    painter.setFocusable(true);
+                    painter.setFocusTraversalKeysEnabled(false);
+                    obj.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                    obj.setVisible(true);
+                    obj.add(painter);
+                    obj.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                }
+
+            }
+        });
+    }
+
+    public static void main(String[] args) {
+        System.out.println("started");
+        LaunchPage();
+        System.out.println("started");
+
+        System.out.println("started");
+
     }
 }
 
-class VibeCheck implements ActionListener{
+class VibeCheck implements ActionListener {
     private static Timer timer;
     private static int delay = 500;
-    VibeCheck(){
+
+    VibeCheck() {
         timer = new Timer(delay, this);
         timer.start();
     }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         Painter.budza();
@@ -36,42 +92,46 @@ class VibeCheck implements ActionListener{
     }
 }
 
-class MatrixMap{
-    
+class MatrixMap {
+
     private static _Object[][] map = new _Object[22][46];
     private static MatrixMap matrixMap;
 
-    public MatrixMap(){
+    public MatrixMap() {
         matrixMap = this;
     }
-    static public void add(_Object object){
-        map[object.GetY()/40-1][object.GetX()/40-1] = object;
+
+    static public void add(_Object object) {
+        map[object.GetY() / 40 - 1][object.GetX() / 40 - 1] = object;
     }
-    static public void updateSnake(SnakeBody head, SnakeBody snakeTail){
-        map[head.GetY()/40-1][head.GetX()/40-1] = head;
-        map[snakeTail.GetY()/40-1][snakeTail.GetX()/40-1] = null;
+
+    static public void updateSnake(SnakeBody head, SnakeBody snakeTail) {
+        map[head.GetY() / 40 - 1][head.GetX() / 40 - 1] = head;
+        map[snakeTail.GetY() / 40 - 1][snakeTail.GetX() / 40 - 1] = null;
     }
-    static public _Object getObject(_Object head){
-        return map[head.GetY()/40-1][head.GetX()/40-1];    
+
+    static public _Object getObject(_Object head) {
+        return map[head.GetY() / 40 - 1][head.GetX() / 40 - 1];
     }
 }
 
-interface Collisable{
+interface Collisable {
     public void OnCollide();
 }
 
-class Teleport extends _Object implements Collisable{
+class Teleport extends _Object implements Collisable {
 
     public Teleport(int x, int y) {
         super(x, y);
     }
+
     @Override
     public void OnCollide() {
     }
 }
 
-class Food extends _Object implements Collisable{
-    
+class Food extends _Object implements Collisable {
+
     private ImageIcon foodIcon = new ImageIcon("sprites/Orange.png");
     private static Random r = new Random();
     private static int lowX = 1;
@@ -80,14 +140,16 @@ class Food extends _Object implements Collisable{
     private static int highY = 23;
 
     public Food() {
-        super((r.nextInt(highX-lowX)+lowX)*40, (r.nextInt(highY-lowY)+lowY)*40);
-        while(MatrixMap.getObject(this)!=null){
-            x = (r.nextInt(highX-lowX)+lowX)*40;
-            y = (r.nextInt(highY-lowY)+lowY)*40;
-        };
+        super((r.nextInt(highX - lowX) + lowX) * 40, (r.nextInt(highY - lowY) + lowY) * 40);
+        while (MatrixMap.getObject(this) != null) {
+            x = (r.nextInt(highX - lowX) + lowX) * 40;
+            y = (r.nextInt(highY - lowY) + lowY) * 40;
+        }
+        ;
         MatrixMap.add(this);
         Painter.addToPaint(this, foodIcon);
     }
+
     @Override
     public void OnCollide() {
         new Food();
@@ -95,7 +157,7 @@ class Food extends _Object implements Collisable{
     }
 }
 
-class Wall extends _Object implements Collisable{
+class Wall extends _Object implements Collisable {
 
     private static ImageIcon wallIcon = new ImageIcon("sprites/Wall.png");
 
@@ -103,38 +165,51 @@ class Wall extends _Object implements Collisable{
         super(x, y);
         Painter.addToPaint(this, wallIcon);
     }
+
     @Override
     public void OnCollide() {
         Snake.GameOver();
     }
 }
 
-class _Object
-{
+class _Object {
     protected int x, y;
-    
-    public _Object(int x, int y)
-    {
+
+    public _Object(int x, int y) {
         Move(x, y);
     }
-    public void Move(int x, int y)
-    {
+
+    public void Move(int x, int y) {
         this.x = x;
         this.y = y;
     }
-    public void addToX(int x){
+
+    public void addToX(int x) {
         this.x += x;
     }
-    public void addToY(int y){
+
+    public void addToY(int y) {
         this.y += y;
     }
-    public int GetX() { return x; }
-    public int GetY() { return y; }
-    public void SetX(int x) { this.x = x; }
-    public void SetY(int y) { this.y = y; }
+
+    public int GetX() {
+        return x;
+    }
+
+    public int GetY() {
+        return y;
+    }
+
+    public void SetX(int x) {
+        this.x = x;
+    }
+
+    public void SetY(int y) {
+        this.y = y;
+    }
 }
 
-class Painter extends JPanel{
+class Painter extends JPanel {
     private static final long serialVersionUID = 1L;
 
     private static Painter painter;
@@ -146,7 +221,7 @@ class Painter extends JPanel{
     private static Color fontColor = new Color(190, 0, 148);
     private static Color block = new Color(11, 37, 61);
 
-    public Painter(){
+    public Painter() {
         painter = this;
         try {
             arcadeClassic = Font.createFont(Font.TRUETYPE_FONT, new File("small_pixel-7.ttf")).deriveFont(70f);
@@ -156,59 +231,67 @@ class Painter extends JPanel{
             e.printStackTrace();
         }
     }
-    private static class Base{
+
+    private static class Base {
         boolean type;
-        Base(boolean type){
+
+        Base(boolean type) {
             this.type = type;
         }
-        public boolean getType(){
+
+        public boolean getType() {
             return type;
         }
     }
-    private static class Change<T> extends Base{
+
+    private static class Change<T> extends Base {
         public _Object coordinates;
         public T field;
 
-        Change(_Object coordinates, T field){
+        Change(_Object coordinates, T field) {
             super(field instanceof String);
             this.coordinates = coordinates;
             this.field = field;
         }
     }
-    public static void addToPaint(_Object coordinates, ImageIcon imageIcon){
+
+    public static void addToPaint(_Object coordinates, ImageIcon imageIcon) {
         toPaint.add(new Change<ImageIcon>(coordinates, imageIcon));
         painter.repaint();
     }
-    public static void addToWrite(_Object coordinates, String string){
+
+    public static void addToWrite(_Object coordinates, String string) {
         toPaint.add(new Change<String>(coordinates, string));
         painter.repaint();
     }
-    public static void budza(){
-        for(int i = 0; i < toPaint.size(); i++){
+
+    public static void budza() {
+        for (int i = 0; i < toPaint.size(); i++) {
             lastPaint.add(toPaint.get(i));
         }
         toPaint.clear();
-        for(int i = 0; i < lastPaint.size(); i++){
+        for (int i = 0; i < lastPaint.size(); i++) {
             toPaint.add(lastPaint.get(i));
         }
         lastPaint.clear();
         firstTime = false;
         painter.repaint();
     }
+
     @Override
     public void paint(Graphics g) {
-        for(int i = 0; i < toPaint.size(); i++){
-            if(firstTime){
+        for (int i = 0; i < toPaint.size(); i++) {
+            if (firstTime) {
                 lastPaint.add(toPaint.get(i));
             }
-            if(toPaint.get(i).getType()){
+            if (toPaint.get(i).getType()) {
                 Change<String> nes = (Change<String>) toPaint.get(i); // ne jedi govna
                 g.setColor(block);
-                g.fillRect(nes.coordinates.x, 940, 72*nes.field.length(), 72);// 940 vrh donjeg taba sta god
+                g.fillRect(nes.coordinates.x, 940, 72 * nes.field.length(), 72);// 940 vrh donjeg taba sta god
                 g.setColor(fontColor);
                 g.setFont(arcadeClassic);
                 g.drawString(nes.field, nes.coordinates.x, nes.coordinates.y);
-            }else{
+            } else {
                 Change<ImageIcon> nes = (Change<ImageIcon>) toPaint.get(i); // ne jedi govna
                 nes.field.paintIcon(this, g, nes.coordinates.GetX(), nes.coordinates.GetY());
             }
@@ -217,52 +300,57 @@ class Painter extends JPanel{
     }
 }
 
-class SnakeBody extends _Object implements Collisable{
+class SnakeBody extends _Object implements Collisable {
 
     SnakeBody(int x, int y) {
         super(x, y);
     }
+
     @Override
     public void OnCollide() {
         Snake.GameOver();
     }
 }
 
-class BorderLines{
+class BorderLines {
 
     private _Object[] borderLines = new _Object[4];
     private ImageIcon[] lines;
 
-    BorderLines(_Object object, ImageIcon[] lines){
+    BorderLines(_Object object, ImageIcon[] lines) {
         this.lines = lines;
         borderLines[0] = new _Object(24, object.GetY());
         borderLines[1] = new _Object(1888, object.GetY());
         borderLines[2] = new _Object(object.GetX(), 24);
         borderLines[3] = new _Object(object.GetX(), 928);
     }
-    public void update(_Object object){
+
+    public void update(_Object object) {
         repaint(lines[1], lines[3]);
         borderLines[0].y = borderLines[1].y = object.GetY();
         borderLines[2].x = borderLines[3].x = object.GetX();
         repaint(lines[0], lines[2]);
     }
-    private void repaint(ImageIcon line1, ImageIcon line2){ // repa int :))) Toni 2k21
+
+    private void repaint(ImageIcon line1, ImageIcon line2) { // repa int :))) Toni 2k21
         Painter.addToPaint(new _Object(borderLines[0].x, borderLines[0].y), line1);
         Painter.addToPaint(new _Object(borderLines[1].x, borderLines[1].y), line1);
         Painter.addToPaint(new _Object(borderLines[2].x, borderLines[2].y), line2);
         Painter.addToPaint(new _Object(borderLines[3].x, borderLines[3].y), line2);
     }
 }
-class DisplayScore implements FoodListener{
 
-    private static int score = -1; 
-    private static _Object object;   
+class DisplayScore implements FoodListener {
 
-    DisplayScore(){
+    private static int score = -1;
+    private static _Object object;
+
+    DisplayScore() {
         Snake.AddFoodListener(this);
         object = new _Object(40, 995);
         OnEaten();
     }
+
     @Override
     public void OnEaten() {
         score++;
@@ -270,7 +358,7 @@ class DisplayScore implements FoodListener{
     }
 }
 
-class Arrows extends _Object{
+class Arrows extends _Object {
 
     private static ImageIcon[] arrowsIcons;
     private static Arrows arrows;
@@ -280,34 +368,38 @@ class Arrows extends _Object{
         arrows = this;
         arrowsIcons = new ImageIcon[4];
     }
-    public static void setArrowIcon(int headIndex, String imageIcon){
+
+    public static void setArrowIcon(int headIndex, String imageIcon) {
         arrowsIcons[headIndex] = new ImageIcon(imageIcon);
     }
-    public static ImageIcon getArrowIcon(int headIndex){
+
+    public static ImageIcon getArrowIcon(int headIndex) {
         return arrowsIcons[headIndex];
     }
-    public static _Object getObject(){
+
+    public static _Object getObject() {
         return arrows;
     }
 }
 
-class Input extends _Object{
+class Input extends _Object {
 
     private static Vector<Character> inputs = new Vector<Character>();
     private static Input input;
     private static ImageIcon nothing = new ImageIcon("sprites/Nothing.png");
+
     public Input() {
         super(1532, 940);
         input = this;
-        for(int i = 0; i < 4; i++){
-            Painter.addToPaint(new _Object(input.x+80*i, input.y), nothing);
+        for (int i = 0; i < 4; i++) {
+            Painter.addToPaint(new _Object(input.x + 80 * i, input.y), nothing);
         }
     }
-    public static void addInput(char c){
-        if(inputs.size()<4){
+
+    public static void addInput(char c) {
+        if (inputs.size() < 4) {
             for (Character character : inputs) {
-                if(c == character)
-                {
+                if (c == character) {
                     return;
                 }
             }
@@ -315,26 +407,29 @@ class Input extends _Object{
             update();
         }
     }
-    public static void removeInput(char c){
-        if(inputs.removeElement(c)){
-            Painter.addToPaint(new _Object(80*inputs.size()+input.x, input.y), nothing);
+
+    public static void removeInput(char c) {
+        if (inputs.removeElement(c)) {
+            Painter.addToPaint(new _Object(80 * inputs.size() + input.x, input.y), nothing);
             update();
         }
     }
-    private static void update(){
-        for(int i = 0; i < inputs.size();i++){
-            Painter.addToWrite(new _Object(80*i+input.x+14, input.y+55), String.valueOf(inputs.get(i)).toUpperCase());
+
+    private static void update() {
+        for (int i = 0; i < inputs.size(); i++) {
+            Painter.addToWrite(new _Object(80 * i + input.x + 14, input.y + 55),
+                    String.valueOf(inputs.get(i)).toUpperCase());
         }
     }
 }
 
-interface FoodListener{
+interface FoodListener {
     public void OnEaten();
 }
 
-class Snake implements KeyListener, ActionListener{
+class Snake implements KeyListener, ActionListener {
 
-    private static Vector<FoodListener> foodListeners   = new Vector<FoodListener>();
+    private static Vector<FoodListener> foodListeners = new Vector<FoodListener>();
 
     private static Vector<KeyEvent> keyEvents = new Vector<KeyEvent>(2);
 
@@ -346,7 +441,7 @@ class Snake implements KeyListener, ActionListener{
     private static ImageIcon afterHead1 = new ImageIcon("sprites/afterHead1.png");
     private static ImageIcon afterHead2 = new ImageIcon("sprites/afterHead2.png");
     private static boolean headTrail = true;
-    
+
     private static ImageIcon snakeTail1 = new ImageIcon("sprites/Tail1.png");
     private static ImageIcon snakeTail2 = new ImageIcon("sprites/Tail2.png");
     private static boolean tailTrail = true;
@@ -356,7 +451,7 @@ class Snake implements KeyListener, ActionListener{
 
     private static boolean right = true;
     private static boolean left = false;
-    private static boolean up = false; 
+    private static boolean up = false;
     private static boolean down = false;
     private static boolean food = false;
 
@@ -364,71 +459,72 @@ class Snake implements KeyListener, ActionListener{
     private static int delay = 100;
     private static int size = 40;
 
-    public static void Food(){
+    public static void Food() {
         food = true;
     }
-    public static void GameOver(){
+
+    public static void GameOver() {
     }
-    public static void AddFoodListener(FoodListener foodListener){
+
+    public static void AddFoodListener(FoodListener foodListener) {
         foodListeners.add(foodListener);
     }
-    public Snake(int x, int y){
+
+    public Snake(int x, int y) {
         new Arrows();
         new DisplayScore();
         new Input();
-        for(int i = 0; i < 4; i++){
-            head[i] = new ImageIcon("sprites/Head" + (i+1) + ".png");
-            lines[i] = new ImageIcon("sprites/Line" + (i+1) + ".png");
-            Arrows.setArrowIcon(i, "sprites/Arrow" + (i+1) + ".png");
+        for (int i = 0; i < 4; i++) {
+            head[i] = new ImageIcon("sprites/Head" + (i + 1) + ".png");
+            lines[i] = new ImageIcon("sprites/Line" + (i + 1) + ".png");
+            Arrows.setArrowIcon(i, "sprites/Arrow" + (i + 1) + ".png");
         }
-        snakeBody.add(new SnakeBody(x*size, y*size));
+        snakeBody.add(new SnakeBody(x * size, y * size));
         borderLines = new BorderLines(snakeBody.get(0), lines);
         Painter.addToPaint(snakeBody.get(0), head[headIndex]);
         Painter.addToPaint(Arrows.getObject(), Arrows.getArrowIcon(2));
-        if(snakeBody.lastElement().GetX()/40%2!=snakeBody.lastElement().GetY()/40%2){
+        if (snakeBody.lastElement().GetX() / 40 % 2 != snakeBody.lastElement().GetY() / 40 % 2) {
             headTrail = false;
         }
         timer = new Timer(delay, this);
         timer.start();
     }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         SnakeBody newHead = new SnakeBody(snakeBody.lastElement().GetX(), snakeBody.lastElement().GetY());
-        if(headTrail){
-            Painter.addToPaint(snakeBody.lastElement(), afterHead1); 
+        if (headTrail) {
+            Painter.addToPaint(snakeBody.lastElement(), afterHead1);
             headTrail = false;
-        }else{
+        } else {
             Painter.addToPaint(snakeBody.lastElement(), afterHead2);
             headTrail = true;
         }
-        if(keyEvents.size()>0){
+        if (keyEvents.size() > 0) {
             KeyEvent keyEvent = keyEvents.get(0);
-            if(keyEvent.getKeyCode() == KeyEvent.VK_A) {
-                if(!right){
+            if (keyEvent.getKeyCode() == KeyEvent.VK_A) {
+                if (!right) {
                     left = true;
                     up = false;
                     down = false;
                     headIndex = 0;
                 }
-            }
-            else if(keyEvent.getKeyCode() == KeyEvent.VK_W) {
-                if(!down){
+            } else if (keyEvent.getKeyCode() == KeyEvent.VK_W) {
+                if (!down) {
                     up = true;
                     right = false;
                     left = false;
                     headIndex = 1;
                 }
-            }
-            else if(keyEvent.getKeyCode() == KeyEvent.VK_S) {
-                if(!up){
+            } else if (keyEvent.getKeyCode() == KeyEvent.VK_S) {
+                if (!up) {
                     down = true;
                     left = false;
                     right = false;
                     headIndex = 3;
                 }
-            }
-            else if(keyEvent.getKeyCode() == KeyEvent.VK_D) {
-                if(!left){
+            } else if (keyEvent.getKeyCode() == KeyEvent.VK_D) {
+                if (!left) {
                     right = true;
                     up = false;
                     down = false;
@@ -438,84 +534,70 @@ class Snake implements KeyListener, ActionListener{
             Painter.addToPaint(Arrows.getObject(), Arrows.getArrowIcon(headIndex));
             keyEvents.remove(0);
         }
-        if(right){
-            if(newHead.GetX()<1840)
-            {
+        if (right) {
+            if (newHead.GetX() < 1840) {
                 newHead.addToX(size);
-            }
-            else
-            {
+            } else {
                 newHead.addToX(-1800);
             }
-        }
-        else if(left){
-            if(newHead.GetX()>40)
-            {
+        } else if (left) {
+            if (newHead.GetX() > 40) {
                 newHead.addToX(-size);
-            }
-            else
-            {
+            } else {
                 newHead.addToX(1800);
             }
-        }
-        else if(up){
-            if(newHead.GetY()>40)
-            {
+        } else if (up) {
+            if (newHead.GetY() > 40) {
                 newHead.addToY(-size);
-            }
-            else
-            {
+            } else {
                 newHead.addToY(840);
             }
-        }
-        else if(down){
-            if(newHead.GetY()<880)
-            {
+        } else if (down) {
+            if (newHead.GetY() < 880) {
                 newHead.addToY(size);
-            }
-            else
-            {
+            } else {
                 newHead.addToY(-840);
             }
         }
         Collisable object = (Collisable) MatrixMap.getObject(newHead);
-        if(object != null){
+        if (object != null) {
             object.OnCollide();
         }
         snakeBody.add(newHead);
         MatrixMap.updateSnake(newHead, snakeBody.get(0));
         Painter.addToPaint(newHead, head[headIndex]);
         borderLines.update(newHead);
-        if(!food && snakeBody.size()>snakeLenght){
-            if(tailTrail){
+        if (!food && snakeBody.size() > snakeLenght) {
+            if (tailTrail) {
                 Painter.addToPaint(snakeBody.get(0), snakeTail1);
                 tailTrail = false;
-            }else{
+            } else {
                 Painter.addToPaint(snakeBody.get(0), snakeTail2);
                 tailTrail = true;
             }
             snakeBody.remove(0);
         }
-        if(food)
-        {
-            for(FoodListener foodListener : foodListeners) {
+        if (food) {
+            for (FoodListener foodListener : foodListeners) {
                 foodListener.OnEaten();
             }
             snakeLenght++;
             food = false;
         }
     }
+
     @Override
     public void keyTyped(KeyEvent e) {
     }
+
     @Override
     public void keyPressed(KeyEvent e) {
-        if(keyEvents.size()<2)
-        {
+        if (keyEvents.size() < 2) {
             keyEvents.add(e);
         }
         Input.addInput(e.getKeyChar());
     }
+
     @Override
     public void keyReleased(KeyEvent e) {
         Input.removeInput(e.getKeyChar());
