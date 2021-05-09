@@ -14,27 +14,47 @@ import java.awt.GraphicsEnvironment;
 import java.awt.FontFormatException;
 import java.awt.*;
 import javax.swing.*;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.SwingUtilities;
+import javax.swing.border.EmptyBorder;
 
 public class Main {
 
     static void LaunchPage() {
-        JFrame jf = new JFrame("Launch Page");
+        JFrame jf = new JFrame("Main menu");
         JPanel jp = new JPanel();
-        JLabel jl1 = new JLabel("Username");
-        JLabel jl2 = new JLabel("Password");
+        jp.setBackground(Color.GRAY);
+        jp.setBounds(0, 0, 400, 600);
+        JLabel jl = new JLabel("S N A K E");
+        jl.setHorizontalAlignment(JLabel.CENTER);
+        jl.setVerticalAlignment(JLabel.CENTER);
+        // button
         JButton button = new JButton("Start");
+        JButton button1 = new JButton("Show Scores");
+        JButton button2 = new JButton("Exit");
 
-        JTextField jt1 = new JTextField(20);
-        JTextField jt2 = new JTextField(20);
-        jf.add(jp);
-        jp.add(jl1);
-        jp.add(jt1);
-        jp.add(jl2);
-        jp.add(jt2);
+        
+        button.setFocusable(false);
+        button.setBounds(200, 200, 100, 100);
+
+        button1.setFocusable(false);
+        button1.setHorizontalAlignment(JButton.CENTER);
+
+        button2.setFocusable(false);
+        button2.setHorizontalAlignment(JButton.CENTER);
+
+        jp.add(jl);
         jp.add(button);
+        jp.add(button1);
+        jp.add(button2);
 
+        
         jf.setSize(400, 600);
         jf.setVisible(true);
+        jf.add(jp);
 
         button.addActionListener(new ActionListener() {
             @Override
