@@ -21,79 +21,93 @@ import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
-public class Main {
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.paint.Stop;
+import javafx.stage.Stage;
+import javafx.geometry.Pos;
 
-    static void LaunchPage() {
-        JFrame jf = new JFrame("Main menu");
-        JPanel jp = new JPanel();
-        jp.setBackground(Color.GRAY);
-        jp.setBounds(0, 0, 400, 600);
-        JLabel jl = new JLabel("S N A K E");
-        jl.setHorizontalAlignment(JLabel.CENTER);
-        jl.setVerticalAlignment(JLabel.CENTER);
-        // button
-        JButton button = new JButton("Start");
-        JButton button1 = new JButton("Show Scores");
-        JButton button2 = new JButton("Exit");
+public class Main extends Application {
+    public void game() {
+        JFrame obj = new JFrame();
 
-        
-        button.setFocusable(false);
-        button.setBounds(200, 200, 100, 100);
+        ImageIcon backGround = new ImageIcon("sprites/Background.png");
+        Painter painter = new Painter();
+        Painter.addToPaint(new _Object(0, 0), backGround);
+        Snake snake = new Snake(2, 1);
+        new VibeCheck();
+        // Paint paint = new Paint();
+        for (int i = 0; i < 5; i++) {
+            new Food();
+        }
+        painter.addKeyListener(snake);
+        painter.setFocusable(true);
+        painter.setFocusTraversalKeysEnabled(false);
+        obj.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        obj.setVisible(true);
+        obj.add(painter);
+        obj.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
 
-        button1.setFocusable(false);
-        button1.setHorizontalAlignment(JButton.CENTER);
+    @Override
+    public void start(Stage stage) throws Exception {
+        BorderPane pane = new BorderPane();
+        Label title = new Label("S N A K E");
+        title.setMaxWidth(Double.MAX_VALUE);
+        title.setAlignment(Pos.CENTER);
+        title.setMinHeight(75);
+        pane.setTop(title);
 
-        button2.setFocusable(false);
-        button2.setHorizontalAlignment(JButton.CENTER);
+        Button start = new Button("Start");
+        start.setMinSize(100, 40);
+        pane.setLeft(start);
 
-        jp.add(jl);
-        jp.add(button);
-        jp.add(button1);
-        jp.add(button2);
+        Button quit = new Button("Quit");
+        quit.setMinSize(100, 40);
+        pane.setRight(quit);
 
-        
-        jf.setSize(400, 600);
-        jf.setVisible(true);
-        jf.add(jp);
+        Button highScore = new Button("High Score");
+        highScore.setMinSize(100, 40);
+        pane.setCenter(highScore);
 
-        button.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("Checking!");
-                if (e.getSource() == button) {
-                    jf.dispose();
-                    JFrame obj = new JFrame();
+        BorderPane.setAlignment(start, Pos.CENTER);
+        BorderPane.setAlignment(quit, Pos.CENTER);
 
-                    ImageIcon backGround = new ImageIcon("sprites/Background.png");
-                    Painter painter = new Painter();
-                    Painter.addToPaint(new _Object(0, 0), backGround);
-                    Snake snake = new Snake(2, 1);
-                    new VibeCheck();
-                    // Paint paint = new Paint();
-                    for (int i = 0; i < 5; i++) {
-                        new Food();
-                    }
-                    painter.addKeyListener(snake);
-                    painter.setFocusable(true);
-                    painter.setFocusTraversalKeysEnabled(false);
-                    obj.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                    obj.setVisible(true);
-                    obj.add(painter);
-                    obj.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                }
+        start.setOnMouseClicked(e -> {
+            if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 1) {
+                stage.close();
+                game();
 
             }
         });
+
+        quit.setOnMouseClicked(e -> {
+            if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 1) {
+                stage.close();
+            }
+        });
+
+        Scene scene = new Scene(pane, 320, 240);
+
+        stage.setScene(scene);
+        stage.setTitle("Main Menu");
+        stage.show();
     }
 
     public static void main(String[] args) {
         System.out.println("started");
-        LaunchPage();
-        System.out.println("started");
-
-        System.out.println("started");
+        launch(args);
+        System.out.println("finish");
 
     }
+
 }
 
 class VibeCheck implements ActionListener {
@@ -329,6 +343,7 @@ class SnakeBody extends _Object implements Collisable {
     @Override
     public void OnCollide() {
         Snake.GameOver();
+
     }
 }
 
@@ -484,6 +499,8 @@ class Snake implements KeyListener, ActionListener {
     }
 
     public static void GameOver() {
+       
+        
     }
 
     public static void AddFoodListener(FoodListener foodListener) {
