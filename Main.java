@@ -3,19 +3,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Random;
 import java.util.Vector;
-import java.awt.Color;
-import java.awt.Graphics;
+
 import javax.swing.Timer;
 import javax.swing.JPanel;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
-import java.awt.Font;
-import java.awt.GraphicsEnvironment;
-import java.awt.FontFormatException;
+
 import java.awt.*;
 import javax.swing.*;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
@@ -35,13 +30,24 @@ import javafx.stage.Stage;
 import javafx.geometry.Pos;
 
 public class Main extends Application {
-    public void game() {
+    public static void TheEnd(){
+        
+        JFrame obj = new JFrame();
+        JLabel label = new JLabel("Too");
+
+        obj.add(label);
+
+        obj.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        obj.setVisible(true);
+        obj.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
+    public static void game() {
         JFrame obj = new JFrame();
 
         ImageIcon backGround = new ImageIcon("sprites/Background.png");
         Painter painter = new Painter();
         Painter.addToPaint(new _Object(0, 0), backGround);
-        Snake snake = new Snake(2, 1);
+        Snake snake = new Snake(2, 1, obj);
         new VibeCheck();
         // Paint paint = new Paint();
         for (int i = 0; i < 5; i++) {
@@ -54,6 +60,14 @@ public class Main extends Application {
         obj.setVisible(true);
         obj.add(painter);
         obj.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        /*while(true){
+            if(Snake.getBr() == 1){
+                obj.dispose();
+                TheEnd();
+                break;
+            }
+        }*/
+        
     }
 
     @Override
@@ -202,6 +216,8 @@ class Wall extends _Object implements Collisable {
 
     @Override
     public void OnCollide() {
+        //Snake.setBr(1);
+        //Main.TheEnd();
         Snake.GameOver();
     }
 }
@@ -342,8 +358,9 @@ class SnakeBody extends _Object implements Collisable {
 
     @Override
     public void OnCollide() {
+        //Snake.setBr(1);
+        //Main.TheEnd();
         Snake.GameOver();
-
     }
 }
 
@@ -494,20 +511,30 @@ class Snake implements KeyListener, ActionListener {
     private static int delay = 100;
     private static int size = 40;
 
+    private static int br = 0;
+    private static JFrame o;
+
     public static void Food() {
         food = true;
     }
-
-    public static void GameOver() {
-       
-        
+    public static void setBr(int i){
+        br = i;
     }
+    public static int getBr(){
+        return br;
+    }
+
+    public static void GameOver(){
+        o.dispose();
+        Main.TheEnd();
+    }
+    
 
     public static void AddFoodListener(FoodListener foodListener) {
         foodListeners.add(foodListener);
     }
 
-    public Snake(int x, int y) {
+    public Snake(int x, int y, JFrame obj) {
         new Arrows();
         new DisplayScore();
         new Input();
@@ -523,6 +550,7 @@ class Snake implements KeyListener, ActionListener {
         if (snakeBody.lastElement().GetX() / 40 % 2 != snakeBody.lastElement().GetY() / 40 % 2) {
             headTrail = false;
         }
+        o = obj;
         timer = new Timer(delay, this);
         timer.start();
     }
