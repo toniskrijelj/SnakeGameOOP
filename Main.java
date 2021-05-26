@@ -32,14 +32,42 @@ import javafx.geometry.Pos;
 public class Main extends Application {
     public static void TheEnd(){
         
-        JFrame obj = new JFrame();
-        JLabel label = new JLabel("Too");
+        JFrame frame = new JFrame("Game Over");
+        JPanel panel = new JPanel();
+        frame.getContentPane();
+        JLabel label = new JLabel("G A M E   O V E R");
+        Dimension size = label.getPreferredSize();
+        label.setBounds(100, 50, size.width, size.height);
+        JButton tryAgainB = new JButton("TRY AGAIN");
+        quitB.setBounds(100, 150, 150, 100);
+        JButton exitB = new JButton("EXIT");
+        exitB.setBounds(100, 250, 150, 100);       
 
-        obj.add(label);
+        panel.setLayout(null);
+        panel.add(label);
+        panel.add(tryAgainB);
+        panel.add(exitB);
 
-        obj.setExtendedState(JFrame.MAXIMIZED_BOTH);
-        obj.setVisible(true);
-        obj.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        tryAgainB.setOnMouseClicked(e -> {
+            if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 1) {
+                frame.dispose();
+                game();
+
+            }
+        });
+        exitB.setOnMouseClicked(e -> {
+            if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 1) {
+                frame.dispose();
+
+            }
+        });
+
+
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        frame.add(panel);
+        frame.setSize(500, 300);
+        frame.setVisible(true);
     }
     public static void game() {
         JFrame obj = new JFrame();
