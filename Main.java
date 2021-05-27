@@ -30,38 +30,47 @@ import javafx.stage.Stage;
 import javafx.geometry.Pos;
 
 public class Main extends Application {
-    public static void TheEnd(){
-        
+    public static int br = 0;
+
+    public static void TheEnd() {
+
         JFrame frame = new JFrame("Game Over");
         JPanel panel = new JPanel();
-        frame.getContentPane();
+        //frame.getContentPane();
         JLabel label = new JLabel("G A M E   O V E R");
         Dimension size = label.getPreferredSize();
-        label.setBounds(100, 50, size.width, size.height);
-        JButton tryAgainB = new JButton("TRY AGAIN");
-        quitB.setBounds(100, 150, 150, 100);
+        label.setBounds(200, 50, 100, 100);
+        JButton SecondLifeB = new JButton("Second Chance");
+        SecondLifeB.setBounds(75, 150, 150, 75);
         JButton exitB = new JButton("EXIT");
-        exitB.setBounds(100, 250, 150, 100);       
+        
 
         panel.setLayout(null);
         panel.add(label);
-        panel.add(tryAgainB);
+        if(br < 2){
+            panel.add(SecondLifeB);
+            exitB.setBounds(275, 150, 150, 75);
+        }
+        else{
+            exitB.setBounds(150, 150, 200, 75);
+        }
+        
         panel.add(exitB);
-
-        tryAgainB.setOnMouseClicked(e -> {
-            if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 1) {
-                frame.dispose();
-                game();
-
+        SecondLifeB.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (e.getSource() == SecondLifeB) {
+                    frame.dispose();
+                    game();
+                }
             }
         });
-        exitB.setOnMouseClicked(e -> {
-            if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 1) {
-                frame.dispose();
-
+        exitB.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (e.getSource() == exitB) {
+                    frame.dispose();
+                }
             }
         });
-
 
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -69,33 +78,36 @@ public class Main extends Application {
         frame.setSize(500, 300);
         frame.setVisible(true);
     }
-    public static void game() {
-        JFrame obj = new JFrame();
 
-        ImageIcon backGround = new ImageIcon("sprites/Background.png");
-        Painter painter = new Painter();
-        Painter.addToPaint(new _Object(0, 0), backGround);
-        Snake snake = new Snake(2, 1, obj);
-        new VibeCheck();
-        // Paint paint = new Paint();
-        for (int i = 0; i < 5; i++) {
-            new Food();
-        }
-        painter.addKeyListener(snake);
-        painter.setFocusable(true);
-        painter.setFocusTraversalKeysEnabled(false);
-        obj.setExtendedState(JFrame.MAXIMIZED_BOTH);
-        obj.setVisible(true);
-        obj.add(painter);
-        obj.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        /*while(true){
-            if(Snake.getBr() == 1){
-                obj.dispose();
-                TheEnd();
-                break;
+    public static void game() {
+        br++;
+        JFrame obj = new JFrame();
+        if (br < 3) {
+            
+
+            ImageIcon backGround = new ImageIcon("sprites/Background.png");
+            Painter painter = new Painter();
+            Painter.addToPaint(new _Object(0, 0), backGround);
+            Snake snake = new Snake(2, 1, obj);
+            new VibeCheck();
+            // Paint paint = new Paint();
+            for (int i = 0; i < 5; i++) {
+                new Food();
             }
-        }*/
-        
+            painter.addKeyListener(snake);
+            painter.setFocusable(true);
+            painter.setFocusTraversalKeysEnabled(false);
+            obj.setExtendedState(JFrame.MAXIMIZED_BOTH);
+            obj.setVisible(true);
+            obj.add(painter);
+            obj.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            /*
+             * while(true){ if(Snake.getBr() == 1){ obj.dispose(); TheEnd(); break; } }
+             */
+        } else {
+            obj.dispose();
+        }
+
     }
 
     @Override
@@ -147,6 +159,7 @@ public class Main extends Application {
         System.out.println("started");
         launch(args);
         System.out.println("finish");
+        
 
     }
 
@@ -244,8 +257,8 @@ class Wall extends _Object implements Collisable {
 
     @Override
     public void OnCollide() {
-        //Snake.setBr(1);
-        //Main.TheEnd();
+        // Snake.setBr(1);
+        // Main.TheEnd();
         Snake.GameOver();
     }
 }
@@ -386,8 +399,8 @@ class SnakeBody extends _Object implements Collisable {
 
     @Override
     public void OnCollide() {
-        //Snake.setBr(1);
-        //Main.TheEnd();
+        // Snake.setBr(1);
+        // Main.TheEnd();
         Snake.GameOver();
     }
 }
@@ -545,18 +558,20 @@ class Snake implements KeyListener, ActionListener {
     public static void Food() {
         food = true;
     }
-    public static void setBr(int i){
+
+    public static void setBr(int i) {
         br = i;
     }
-    public static int getBr(){
+
+    public static int getBr() {
         return br;
     }
 
-    public static void GameOver(){
+    public static void GameOver() {
+        timer.stop();
         o.dispose();
         Main.TheEnd();
     }
-    
 
     public static void AddFoodListener(FoodListener foodListener) {
         foodListeners.add(foodListener);
