@@ -36,25 +36,23 @@ public class Main extends Application {
 
         JFrame frame = new JFrame("Game Over");
         JPanel panel = new JPanel();
-        //frame.getContentPane();
+        // frame.getContentPane();
         JLabel label = new JLabel("G A M E   O V E R");
         Dimension size = label.getPreferredSize();
         label.setBounds(200, 50, 100, 100);
         JButton SecondLifeB = new JButton("Second Chance");
         SecondLifeB.setBounds(75, 150, 150, 75);
         JButton exitB = new JButton("EXIT");
-        
 
         panel.setLayout(null);
         panel.add(label);
-        if(br < 2){
+        if (br < 2) {
             panel.add(SecondLifeB);
             exitB.setBounds(275, 150, 150, 75);
-        }
-        else{
+        } else {
             exitB.setBounds(150, 150, 200, 75);
         }
-        
+
         panel.add(exitB);
         SecondLifeB.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -83,7 +81,6 @@ public class Main extends Application {
         br++;
         JFrame obj = new JFrame();
         if (br < 3) {
-            
 
             ImageIcon backGround = new ImageIcon("sprites/Background.png");
             Painter painter = new Painter();
@@ -127,12 +124,31 @@ public class Main extends Application {
         quit.setMinSize(100, 40);
         pane.setRight(quit);
 
-        Button highScore = new Button("High Score");
-        highScore.setMinSize(100, 40);
-        pane.setCenter(highScore);
+        Button readFile = new Button("About us");
+        readFile.setMinSize(100, 40);
+        pane.setCenter(readFile);
 
         BorderPane.setAlignment(start, Pos.CENTER);
         BorderPane.setAlignment(quit, Pos.CENTER);
+
+        readFile.setOnMouseClicked(e -> {
+            if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 1) {
+                try {
+                    // constructor of file class having file as argument
+                    File file = new File("D:\\Skola\\OOP\\SnakeGameOOP\\ReadMe.txt");
+                    if (!Desktop.isDesktopSupported())// check if Desktop is supported by Platform or not
+                    {
+                        System.out.println("not supported");
+                        return;
+                    }
+                    Desktop desktop = Desktop.getDesktop();
+                    if (file.exists()) // checks file exists or not
+                        desktop.open(file); // opens the specified file
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
 
         start.setOnMouseClicked(e -> {
             if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 1) {
@@ -159,7 +175,6 @@ public class Main extends Application {
         System.out.println("started");
         launch(args);
         System.out.println("finish");
-        
 
     }
 
